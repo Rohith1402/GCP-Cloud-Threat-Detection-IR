@@ -283,3 +283,42 @@ python3 -m unittest discover -s tests -v
 ```
 
 **Note:** This module consolidates locally generated reports from synthetic training data. It is not yet connected to a live SIEM or GCP event stream.
+
+## Module 7: Incident Response Automation
+
+This module generates incident response plans from consolidated SOC alerts.
+
+### Capabilities
+- Reviews consolidated security alerts.
+- Generates incidents for CRITICAL and HIGH severity alerts.
+- Assigns unique, consistent incident references.
+- Extracts affected principals and resources.
+- Recommends response actions based on alert characteristics.
+- Assigns response priorities.
+- Maintains analyst approval status.
+- Saves incident records in JSON format.
+
+### Safety controls
+- Simulation-only execution.
+- No automatic changes to GCP resources.
+- Analyst approval required before response.
+- Local incident audit report.
+
+### Run incident response engine
+```bash
+python3 detection/incident_response.py
+```
+
+### Run Module 7 tests
+```bash
+python3 -m unittest tests.test_incident_response -v
+```
+
+### Run complete test suite
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+**Validation:** All 43 project tests passed.
+
+**Note:** The project currently uses synthetic training data and locally generated reports. Live GCP integrations and real response actions are not enabled.
