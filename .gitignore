@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Local GCP data containing personal information
+sample_data/iam_policy.json
+reports/iam_security_alerts.json
+
+# Credentials and secrets
+.env
+*.key
+*.pem
+service-account*.json
+
+# macOS
+.DS_Store
