@@ -1,0 +1,29 @@
+
+{
+  "roles/owner": {
+    "permissions": [
+      "iam.serviceAccounts.actAs",
+      "iam.serviceAccounts.getAccessToken",
+      "iam.serviceAccountKeys.create",
+      "resourcemanager.projects.setIamPolicy",
+      "iam.roles.create",
+      "iam.roles.update"
+    ]
+  },
+  "roles/iam.serviceAccountTokenCreator": {
+    "permissions": [
+      "iam.serviceAccounts.getAccessToken"
+    ]
+  },
+  "roles/iam.serviceAccountAdmin": {
+    "permissions": [
+      "iam.serviceAccountKeys.create",
+      "iam.serviceAccounts.actAs"
+    ]
+  },
+  "roles/viewer": {
+    "permissions": [
+      "resourcemanager.projects.get"
+    ]
+  }
+}

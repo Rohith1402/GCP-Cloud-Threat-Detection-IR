@@ -124,3 +124,29 @@ All five tests passed during initial development.
 This project is developed for educational and authorised security testing purposes. Detection rules are heuristic and require contextual investigation before treating an alert as malicious.
 
 No automated remediation is enabled by default.
+
+## Module 2: IAM Privilege Escalation Detection
+
+This module analyses IAM policy bindings against a role-permission catalogue to identify sensitive IAM capabilities.
+
+### Detection capabilities
+- Detects sensitive service-account permissions.
+- Identifies permissions that can modify project IAM policies.
+- Flags role creation and role-update capabilities.
+- Calculates risk scores and classifies findings as LOW, MEDIUM, or HIGH.
+- Generates a JSON alert report.
+
+### Test coverage
+- Owner role with sensitive permissions.
+- Service Account Token Creator role.
+- Normal Viewer role.
+- Unknown roles.
+- Severity classification.
+
+### Run tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+**Note:** `sample_data/role_definitions.json` currently contains synthetic test data. It is not a verified export of Google's predefined IAM roles.
