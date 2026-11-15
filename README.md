@@ -182,3 +182,36 @@ python3 -m unittest discover -s tests -v
 ```
 
 **Note:** The current audit log events are synthetic training data, not live GCP audit records.
+
+## Module 4: Suspicious Service Account Activity Detection
+
+This module analyses service-account activity events to identify potentially suspicious behaviour.
+
+### Detection capabilities
+- Service-account key creation detection.
+- Authentication outside configured normal hours.
+- Multiple failed authentication attempts.
+- Failed authentication detection.
+- Risk scoring and severity classification.
+- JSON alert report generation.
+
+### Test coverage
+- Service-account key creation.
+- Authentication outside normal hours.
+- Multiple failed authentication attempts.
+- Normal authentication filtering.
+- Severity classification.
+
+### Run detection
+
+```bash
+python3 detection/service_account_monitor.py
+```
+
+### Run automated tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+**Note:** The current service-account events are synthetic training data.
