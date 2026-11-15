@@ -1,0 +1,69 @@
+
+{
+  "audit_logs": [
+    {
+      "insertId": "audit-001",
+      "timestamp": "2026-11-15T10:15:00Z",
+      "severity": "NOTICE",
+      "protoPayload": {
+        "serviceName": "cloudresourcemanager.googleapis.com",
+        "methodName": "SetIamPolicy",
+        "resourceName": "projects/gcp-cloud-security-lab-514814",
+        "authenticationInfo": {
+          "principalEmail": "admin@example.com"
+        },
+        "status": {
+          "code": 0
+        }
+      }
+    },
+    {
+      "insertId": "audit-002",
+      "timestamp": "2026-11-15T10:20:00Z",
+      "severity": "NOTICE",
+      "protoPayload": {
+        "serviceName": "iam.googleapis.com",
+        "methodName": "google.iam.admin.v1.CreateServiceAccountKey",
+        "resourceName": "projects/gcp-cloud-security-lab-514814/serviceAccounts/test-account",
+        "authenticationInfo": {
+          "principalEmail": "unknown-user@example.com"
+        },
+        "status": {
+          "code": 0
+        }
+      }
+    },
+    {
+      "insertId": "audit-003",
+      "timestamp": "2026-11-15T10:25:00Z",
+      "severity": "NOTICE",
+      "protoPayload": {
+        "serviceName": "iam.googleapis.com",
+        "methodName": "google.iam.admin.v1.CreateServiceAccount",
+        "resourceName": "projects/gcp-cloud-security-lab-514814/serviceAccounts/new-account",
+        "authenticationInfo": {
+          "principalEmail": "developer@example.com"
+        },
+        "status": {
+          "code": 7
+        }
+      }
+    },
+    {
+      "insertId": "audit-004",
+      "timestamp": "2026-11-15T10:30:00Z",
+      "severity": "NOTICE",
+      "protoPayload": {
+        "serviceName": "cloudresourcemanager.googleapis.com",
+        "methodName": "SetIamPolicy",
+        "resourceName": "projects/gcp-cloud-security-lab-514814",
+        "authenticationInfo": {
+          "principalEmail": "admin@example.com"
+        },
+        "status": {
+          "code": 0
+        }
+      }
+    }
+  ]
+}

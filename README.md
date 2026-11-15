@@ -150,3 +150,35 @@ python3 -m unittest discover -s tests -v
 ```
 
 **Note:** `sample_data/role_definitions.json` currently contains synthetic test data. It is not a verified export of Google's predefined IAM roles.
+
+## Module 3: GCP Cloud Audit Logs Monitoring
+
+This module analyses Cloud Audit Log events using Python to identify potentially suspicious administrative activities.
+
+### Detection capabilities
+- IAM policy modification detection.
+- Service account key creation detection.
+- Failed administrative operation detection.
+- Risk scoring and severity classification.
+- JSON alert report generation.
+
+### Test coverage
+- IAM policy modification.
+- Service account key creation.
+- Failed service account creation.
+- Normal operation filtering.
+- Severity classification.
+
+### Run detection
+
+```bash
+python3 detection/audit_log_monitor.py
+```
+
+### Run automated tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+**Note:** The current audit log events are synthetic training data, not live GCP audit records.
