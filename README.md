@@ -322,3 +322,40 @@ python3 -m unittest discover -s tests -v
 **Validation:** All 43 project tests passed.
 
 **Note:** The project currently uses synthetic training data and locally generated reports. Live GCP integrations and real response actions are not enabled.
+
+## Module 8: SOC Security Dashboard and Reporting
+
+Built an interactive SOC dashboard using Streamlit, Plotly and Pandas.
+
+### Dashboard features
+- Total security alerts and incident KPIs.
+- Severity distribution chart.
+- Alerts by detection module.
+- Risk score distribution.
+- Prioritised SOC alert table.
+- Incident response tracking.
+- CSV exports for alerts and incidents.
+
+### Run the dashboard
+
+Install dependencies:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+Launch:
+
+```bash
+python3 -m streamlit run dashboard.py
+```
+
+Open `http://localhost:8501` in your browser.
+
+### Project validation
+- 43 automated Python tests passed.
+- Dashboard charts and tables visually verified.
+- CSV report exports available.
+- Incident response remains simulation-only.
+
+**Data note:** The current implementation uses synthetic training data and local JSON reports. It is not a live GCP monitoring integration.
