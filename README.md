@@ -215,3 +215,38 @@ python3 -m unittest discover -s tests -v
 ```
 
 **Note:** The current service-account events are synthetic training data.
+
+## Module 5: Security Command Center Findings Analysis
+
+This module analyses Security Command Center findings and prioritises active cloud security risks.
+
+### Detection capabilities
+- Public cloud storage exposure detection.
+- Critical vulnerability prioritisation.
+- Over-privileged IAM finding analysis.
+- Suspicious network activity categorisation.
+- Inactive finding filtering.
+- Risk scoring and priority classification.
+- JSON alert report generation.
+
+### Test coverage
+- Public bucket access.
+- Over-privileged IAM.
+- Inactive finding filtering.
+- Suspicious network activity.
+- Risk-based finding sorting.
+- Severity classification.
+
+### Run analyzer
+
+```bash
+python3 detection/scc_findings_analyzer.py
+```
+
+### Run automated tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+**Note:** Current SCC findings are synthetic training data, not live Security Command Center findings.

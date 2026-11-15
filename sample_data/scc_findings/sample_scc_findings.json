@@ -1,0 +1,50 @@
+
+{
+  "findings": [
+    {
+      "finding_id": "scc-001",
+      "category": "PUBLIC_BUCKET_ACCESS",
+      "severity": "CRITICAL",
+      "state": "ACTIVE",
+      "resource_name": "projects/gcp-cloud-security-lab-514814/buckets/public-data",
+      "description": "Cloud storage bucket allows public access",
+      "source": "Security Command Center"
+    },
+    {
+      "finding_id": "scc-002",
+      "category": "CRITICAL_VULNERABILITY",
+      "severity": "HIGH",
+      "state": "ACTIVE",
+      "resource_name": "projects/gcp-cloud-security-lab-514814/instances/web-server",
+      "description": "Critical vulnerability detected on compute instance",
+      "source": "Security Command Center"
+    },
+    {
+      "finding_id": "scc-003",
+      "category": "OVER_PRIVILEGED_IAM",
+      "severity": "HIGH",
+      "state": "ACTIVE",
+      "resource_name": "projects/gcp-cloud-security-lab-514814",
+      "description": "Excessive IAM permissions detected",
+      "source": "Security Command Center"
+    },
+    {
+      "finding_id": "scc-004",
+      "category": "SUSPICIOUS_NETWORK_ACTIVITY",
+      "severity": "MEDIUM",
+      "state": "ACTIVE",
+      "resource_name": "projects/gcp-cloud-security-lab-514814/instances/app-server",
+      "description": "Unusual network activity detected",
+      "source": "Security Command Center"
+    },
+    {
+      "finding_id": "scc-005",
+      "category": "OUTDATED_SOFTWARE",
+      "severity": "LOW",
+      "state": "INACTIVE",
+      "resource_name": "projects/gcp-cloud-security-lab-514814/instances/test-server",
+      "description": "Outdated software detected",
+      "source": "Security Command Center"
+    }
+  ]
+}
