@@ -10,7 +10,8 @@ REPORT_FILES = [
     BASE_DIR / "reports" / "iam_privilege_alerts.json",
     BASE_DIR / "reports" / "audit_log_alerts.json",
     BASE_DIR / "reports" / "service_account_alerts.json",
-    BASE_DIR / "reports" / "scc_security_alerts.json"
+    BASE_DIR / "reports" / "scc_security_alerts.json",
+    BASE_DIR / "reports" / "gcp_audit_logs.json",
 ]
 
 OUTPUT_FILE = BASE_DIR / "reports" / "consolidated_soc_alerts.json"
@@ -28,10 +29,51 @@ def classify_severity(score):
     return "LOW"
 
 
+def assess_gcp_risk(method_name):
+    """
+    Assign a triage score based on the GCP audit method.
+
+    These scores indicate investigation priority,
+    not proof of malicious activity.
+    """
+
+    method = (method_name or "").lower()
+
+    if "createserviceaccountkey" in method:
+        return 90
+
+    if "setiampolicy" in method:
+        return 80
+
+    if "deleteserviceaccountkey" in method:
+        return 70
+
+    if "createserviceaccount" in method:
+        return 40
+
+    if "enableService".lower() in method:
+        return 20
+
+    if "createproject" in method:
+        return 20
+
+    if "getoperation" in method:
+        return 5
+
+    return 10
+
+
 def normalise_alert(alert, source_file):
     """Convert different detection outputs into one common format."""
 
-    raw_score = alert.get("risk_score", 0)
+    is_gcp = source_file == "gcp_audit_logs"
+
+    if is_gcp:
+        method_name = alert.get("method_name", "UNKNOWN_METHOD")
+        raw_score = assess_gcp_risk(method_name)
+    else:
+        method_name = alert.get("method", "")
+        raw_score = alert.get("risk_score", 0)
 
     try:
         risk_score = int(raw_score)
@@ -41,20 +83,16 @@ def normalise_alert(alert, source_file):
 
     severity = classify_severity(risk_score)
 
-    if "finding_id" in alert:
-        alert_id = alert["finding_id"]
-    elif "event_id" in alert:
-        alert_id = alert["event_id"]
-    elif "insert_id" in alert:
-        alert_id = alert["insert_id"]
-    else:
-        alert_id = (
-            f"{source_file}:"
-            f"{alert.get('principal', 'unknown')}"
-        )
+    alert_id = (
+        alert.get("finding_id")
+        or alert.get("event_id")
+        or alert.get("insert_id")
+        or f"{source_file}:{alert.get('principal', 'unknown')}"
+    )
 
     principal = (
         alert.get("principal")
+        or alert.get("principal_email")
         or alert.get("service_account")
         or alert.get("resource_name")
         or "unknown"
@@ -65,24 +103,37 @@ def normalise_alert(alert, source_file):
     if not findings and alert.get("finding"):
         findings = [alert["finding"]]
 
+    if is_gcp:
+        description = (
+            f"GCP Cloud Audit event: {method_name}. "
+            f"Service: {alert.get('service_name') or 'Unknown'}. "
+            "This event requires contextual review and is not "
+            "confirmation of malicious activity."
+        )
+        category = method_name
+    else:
+        description = alert.get(
+            "description",
+            "; ".join(str(item) for item in findings)
+            or "Security alert detected"
+        )
+        category = alert.get(
+            "category",
+            alert.get(
+                "event_type",
+                method_name or "GENERAL_SECURITY_ALERT"
+            )
+        )
+
     return {
         "alert_id": str(alert_id),
         "source_module": source_file,
         "principal_or_resource": principal,
-        "category": alert.get(
-            "category",
-            alert.get(
-                "event_type",
-                alert.get("method", "GENERAL_SECURITY_ALERT")
-            )
-        ),
+        "category": category,
         "risk_score": risk_score,
         "severity": severity,
-        "description": alert.get(
-            "description",
-            "; ".join(str(item) for item in findings)
-            or "Security alert detected"
-        ),
+        "description": description,
+        "timestamp": alert.get("timestamp"),
         "status": "OPEN"
     }
 
@@ -152,12 +203,13 @@ def main():
                 continue
 
             for alert in data:
-                all_alerts.append(
-                    normalise_alert(
-                        alert,
-                        report_file.stem
+                if isinstance(alert, dict):
+                    all_alerts.append(
+                        normalise_alert(
+                            alert,
+                            report_file.stem
+                        )
                     )
-                )
 
         except (json.JSONDecodeError, OSError) as error:
             print(
@@ -182,7 +234,6 @@ def main():
         json.dump(report, file, indent=4)
 
     print("\n===== UNIFIED SOC ALERT CLASSIFICATION ENGINE =====")
-
     print(f"\nTotal alerts: {len(classified_alerts)}")
 
     print("\nSeverity Summary:")
@@ -193,7 +244,6 @@ def main():
     print("\nPrioritised Alerts:")
 
     for alert in classified_alerts:
-
         print(
             f"\n[{alert['severity']}] "
             f"Score: {alert['risk_score']} | "

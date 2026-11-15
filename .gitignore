@@ -16,3 +16,9 @@ service-account*.json
 
 # macOS
 .DS_Store
+
+# Keep all local security reports private
+reports/
+
+# Local backup files
+*.backup

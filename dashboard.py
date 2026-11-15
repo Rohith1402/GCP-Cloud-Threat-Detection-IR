@@ -1,5 +1,6 @@
 
 import json
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -12,21 +13,15 @@ import streamlit as st
 
 BASE_DIR = Path(__file__).resolve().parent
 
-LOCAL_ALERT_FILE = (
-    BASE_DIR / "reports" / "consolidated_soc_alerts.json"
-)
+REPORT_DIR = BASE_DIR / "reports"
+DEMO_DIR = BASE_DIR / "demo_data"
 
-LOCAL_INCIDENT_FILE = (
-    BASE_DIR / "reports" / "incident_response_log.json"
-)
+LOCAL_ALERT_FILE = REPORT_DIR / "consolidated_soc_alerts.json"
+LOCAL_INCIDENT_FILE = REPORT_DIR / "incident_response_log.json"
+GCP_AUDIT_FILE = REPORT_DIR / "gcp_audit_logs.json"
 
-DEMO_ALERT_FILE = (
-    BASE_DIR / "demo_data" / "consolidated_soc_alerts.json"
-)
-
-DEMO_INCIDENT_FILE = (
-    BASE_DIR / "demo_data" / "incident_response_log.json"
-)
+DEMO_ALERT_FILE = DEMO_DIR / "consolidated_soc_alerts.json"
+DEMO_INCIDENT_FILE = DEMO_DIR / "incident_response_log.json"
 
 st.set_page_config(
     page_title="GCP SOC Security Dashboard",
@@ -39,15 +34,11 @@ st.set_page_config(
 # 2. SELECT DATA SOURCE
 # ==================================================
 
-# Use local reports only when BOTH local files exist.
-# Otherwise, use the sanitized public demo dataset.
-
 if LOCAL_ALERT_FILE.exists() and LOCAL_INCIDENT_FILE.exists():
     ALERT_FILE = LOCAL_ALERT_FILE
     INCIDENT_FILE = LOCAL_INCIDENT_FILE
     DATA_MODE = "LOCAL SECURITY REPORTS"
     IS_DEMO = False
-
 else:
     ALERT_FILE = DEMO_ALERT_FILE
     INCIDENT_FILE = DEMO_INCIDENT_FILE
@@ -66,14 +57,10 @@ st.caption(
 )
 
 st.sidebar.title("🛡️ SOC Dashboard")
-
 st.sidebar.caption("GCP Cloud Security Lab")
-
 st.sidebar.divider()
 
-st.sidebar.info(
-    f"Data Source: {DATA_MODE}"
-)
+st.sidebar.info(f"Data Source: {DATA_MODE}")
 
 if IS_DEMO:
     st.sidebar.warning(
@@ -84,14 +71,10 @@ else:
         "Using local security reports."
     )
 
-if st.sidebar.button(
-    "🔄 Refresh Dashboard",
-    width="stretch",
-):
+if st.sidebar.button("🔄 Refresh Dashboard", width="stretch"):
     st.rerun()
 
 st.sidebar.divider()
-
 st.sidebar.caption(
     "Built with Python, Streamlit, Plotly and Pandas"
 )
@@ -132,8 +115,6 @@ def extract_alerts(data):
 
 def mask_email(value):
     """Mask email addresses in displayed information."""
-
-    import re
 
     return re.sub(
         r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}",
@@ -220,10 +201,7 @@ total_incidents = len(incidents_df)
 
 pending_incidents = 0
 
-if (
-    not incidents_df.empty
-    and "status" in incidents_df.columns
-):
+if not incidents_df.empty and "status" in incidents_df.columns:
     pending_incidents = int(
         incidents_df["status"]
         .astype(str)
@@ -249,7 +227,100 @@ col5.metric("Pending Approval", pending_incidents)
 st.divider()
 
 # ==================================================
-# 9. ALERT SEVERITY DISTRIBUTION
+# 9. LIVE GCP AUDIT EVENTS
+# ==================================================
+
+st.subheader("☁️ Live GCP Cloud Audit Events")
+
+if IS_DEMO:
+    st.info(
+        "Live GCP telemetry is available only in the local "
+        "authenticated environment. The public dashboard "
+        "continues to use sanitized demo data."
+    )
+
+elif GCP_AUDIT_FILE.exists():
+
+    gcp_data = load_json(GCP_AUDIT_FILE)
+
+    if isinstance(gcp_data, list) and gcp_data:
+
+        gcp_df = pd.DataFrame(gcp_data)
+
+        st.success(
+            f"Latest local collection: {len(gcp_df)} "
+            "GCP audit events"
+        )
+
+        if "timestamp" in gcp_df.columns:
+            gcp_df["timestamp"] = pd.to_datetime(
+                gcp_df["timestamp"],
+                errors="coerce",
+                utc=True,
+            )
+
+        if "principal_email" in gcp_df.columns:
+            gcp_df["principal_email"] = (
+                gcp_df["principal_email"]
+                .fillna("Unknown")
+                .apply(mask_email)
+            )
+
+        if "resource_name" in gcp_df.columns:
+            gcp_df["resource_name"] = (
+                gcp_df["resource_name"]
+                .fillna("Unknown")
+                .apply(mask_email)
+            )
+
+        gcp_columns = [
+            column
+            for column in [
+                "timestamp",
+                "method_name",
+                "service_name",
+                "severity",
+                "principal_email",
+                "resource_name",
+            ]
+            if column in gcp_df.columns
+        ]
+
+        gcp_display_df = gcp_df[gcp_columns].copy()
+
+        st.dataframe(
+            gcp_display_df,
+            width="stretch",
+            hide_index=True,
+        )
+
+        gcp_csv = gcp_display_df.to_csv(
+            index=False
+        ).encode("utf-8")
+
+        st.download_button(
+            label="📥 Download GCP Audit Events CSV",
+            data=gcp_csv,
+            file_name="gcp_audit_events.csv",
+            mime="text/csv",
+        )
+
+    else:
+        st.info(
+            "No GCP audit events are currently available "
+            "in the local report."
+        )
+
+else:
+    st.info(
+        "GCP audit report not found. Run the GCP audit-log "
+        "collector to retrieve events."
+    )
+
+st.divider()
+
+# ==================================================
+# 10. ALERT SEVERITY DISTRIBUTION
 # ==================================================
 
 st.subheader("🚨 Alert Severity Distribution")
@@ -300,7 +371,7 @@ else:
 st.divider()
 
 # ==================================================
-# 10. DETECTION MODULE DISTRIBUTION
+# 11. DETECTION MODULE DISTRIBUTION
 # ==================================================
 
 left, right = st.columns(2)
@@ -341,7 +412,7 @@ with left:
         st.info("Detection module information unavailable.")
 
 # ==================================================
-# 11. RISK SCORE DISTRIBUTION
+# 12. RISK SCORE DISTRIBUTION
 # ==================================================
 
 with right:
@@ -376,7 +447,7 @@ with right:
 st.divider()
 
 # ==================================================
-# 12. PRIORITISED SOC ALERTS
+# 13. PRIORITISED SOC ALERTS
 # ==================================================
 
 st.subheader("⚠️ Prioritised SOC Alerts")
@@ -396,12 +467,9 @@ if not alerts_df.empty:
         if column in alerts_df.columns
     ]
 
-    display_df = alerts_df[
-        display_columns
-    ].copy()
+    display_df = alerts_df[display_columns].copy()
 
     if "principal_or_resource" in display_df.columns:
-
         display_df["principal_or_resource"] = (
             display_df["principal_or_resource"]
             .apply(mask_email)
@@ -452,7 +520,7 @@ else:
 st.divider()
 
 # ==================================================
-# 13. INCIDENT RESPONSE TRACKING
+# 14. INCIDENT RESPONSE TRACKING
 # ==================================================
 
 st.subheader("🛡️ Incident Response Tracking")
@@ -479,7 +547,6 @@ if not incidents_df.empty:
     ].copy()
 
     if "resource" in incident_display_df.columns:
-
         incident_display_df["resource"] = (
             incident_display_df["resource"]
             .apply(mask_email)
@@ -503,13 +570,12 @@ if not incidents_df.empty:
     )
 
 else:
-
     st.info("No incident report available.")
 
 st.divider()
 
 # ==================================================
-# 14. SECURITY SUMMARY
+# 15. SECURITY SUMMARY
 # ==================================================
 
 st.subheader("📋 Security Summary")
@@ -538,7 +604,7 @@ with summary_col2:
     st.write("Execution mode: SIMULATION_ONLY")
 
 # ==================================================
-# 15. FOOTER
+# 16. FOOTER
 # ==================================================
 
 st.divider()
