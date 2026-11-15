@@ -250,3 +250,36 @@ python3 -m unittest discover -s tests -v
 ```
 
 **Note:** Current SCC findings are synthetic training data, not live Security Command Center findings.
+
+## Module 6: Unified SOC Alert Classification Engine
+
+This module consolidates security alerts from Modules 1–5 into a central SOC alert feed.
+
+### Capabilities
+- Normalises different security alert formats.
+- Applies consistent risk-based severity classification.
+- Supports CRITICAL, HIGH, MEDIUM and LOW priorities.
+- Deduplicates alerts within the same source module.
+- Sorts alerts by risk score.
+- Generates consolidated severity summaries.
+- Exports a unified JSON alert report.
+
+### Risk classification
+| Risk score | Severity |
+|---|---|
+| 90–100 | CRITICAL |
+| 70–89 | HIGH |
+| 30–69 | MEDIUM |
+| 0–29 | LOW |
+
+### Run classifier
+```bash
+python3 detection/alert_classifier.py
+```
+
+### Run automated tests
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+**Note:** This module consolidates locally generated reports from synthetic training data. It is not yet connected to a live SIEM or GCP event stream.
