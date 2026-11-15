@@ -1,0 +1,63 @@
+
+[
+  {
+    "alert_id": "DEMO-IAM-001",
+    "source_module": "iam_security_alerts",
+    "principal_or_resource": "demo-user@example.com",
+    "category": "IAM_MISCONFIGURATION",
+    "risk_score": 95,
+    "severity": "CRITICAL",
+    "description": "Excessive privileged IAM role assigned",
+    "status": "OPEN"
+  },
+  {
+    "alert_id": "DEMO-SCC-001",
+    "source_module": "scc_security_alerts",
+    "principal_or_resource": "projects/demo-project/buckets/public-data",
+    "category": "PUBLIC_BUCKET_ACCESS",
+    "risk_score": 100,
+    "severity": "CRITICAL",
+    "description": "Cloud storage bucket allows public access",
+    "status": "OPEN"
+  },
+  {
+    "alert_id": "DEMO-SCC-002",
+    "source_module": "scc_security_alerts",
+    "principal_or_resource": "projects/demo-project/instances/web-server",
+    "category": "VULNERABILITY",
+    "risk_score": 85,
+    "severity": "HIGH",
+    "description": "Critical vulnerability detected on compute instance",
+    "status": "OPEN"
+  },
+  {
+    "alert_id": "DEMO-AUDIT-001",
+    "source_module": "audit_log_alerts",
+    "principal_or_resource": "demo-admin@example.com",
+    "category": "IAM_POLICY_CHANGE",
+    "risk_score": 55,
+    "severity": "MEDIUM",
+    "description": "Sensitive IAM policy modification detected",
+    "status": "OPEN"
+  },
+  {
+    "alert_id": "DEMO-SA-001",
+    "source_module": "service_account_alerts",
+    "principal_or_resource": "demo-service-account@demo-project.iam.gserviceaccount.com",
+    "category": "AUTHENTICATION_FAILURE",
+    "risk_score": 60,
+    "severity": "MEDIUM",
+    "description": "Multiple failed service account authentication attempts",
+    "status": "OPEN"
+  },
+  {
+    "alert_id": "DEMO-IAM-002",
+    "source_module": "iam_privilege_alerts",
+    "principal_or_resource": "demo-developer@example.com",
+    "category": "PRIVILEGE_ESCALATION",
+    "risk_score": 25,
+    "severity": "LOW",
+    "description": "Low-risk IAM permission change requiring review",
+    "status": "OPEN"
+  }
+]

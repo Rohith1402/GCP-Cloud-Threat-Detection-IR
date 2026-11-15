@@ -1,0 +1,42 @@
+
+[
+  {
+    "incident_id": "IR-DEMO-001",
+    "alert_id": "DEMO-IAM-001",
+    "source_module": "iam_security_alerts",
+    "severity": "CRITICAL",
+    "risk_score": 95,
+    "resource": "demo-user@example.com",
+    "description": "Excessive privileged IAM role assigned",
+    "recommended_action": "Review IAM bindings and remove unnecessary privileged permissions.",
+    "response_priority": "HIGH",
+    "status": "PENDING_ANALYST_APPROVAL",
+    "execution_mode": "SIMULATION_ONLY"
+  },
+  {
+    "incident_id": "IR-DEMO-002",
+    "alert_id": "DEMO-SCC-001",
+    "source_module": "scc_security_alerts",
+    "severity": "CRITICAL",
+    "risk_score": 100,
+    "resource": "projects/demo-project/buckets/public-data",
+    "description": "Cloud storage bucket allows public access",
+    "recommended_action": "Review bucket permissions and remove unintended public access.",
+    "response_priority": "URGENT",
+    "status": "PENDING_ANALYST_APPROVAL",
+    "execution_mode": "SIMULATION_ONLY"
+  },
+  {
+    "incident_id": "IR-DEMO-003",
+    "alert_id": "DEMO-SCC-002",
+    "source_module": "scc_security_alerts",
+    "severity": "HIGH",
+    "risk_score": 85,
+    "resource": "projects/demo-project/instances/web-server",
+    "description": "Critical vulnerability detected",
+    "recommended_action": "Validate the vulnerability and prioritise patching the affected resource.",
+    "response_priority": "HIGH",
+    "status": "PENDING_ANALYST_APPROVAL",
+    "execution_mode": "SIMULATION_ONLY"
+  }
+]
