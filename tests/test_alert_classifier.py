@@ -364,5 +364,80 @@ class TestPhase2DetectionRules(unittest.TestCase):
         self.assertEqual(len(records), 2)
 
 
+class TestGCPAuditLogDeduplication(unittest.TestCase):
+
+    def test_same_event_id_from_same_source_is_deduplicated(self):
+        alerts = [
+            normalise_alert(
+                {
+                    "event_id": "gcp-event-001",
+                    "method_name": "GetOperation",
+                    "risk_score": 20
+                },
+                "gcp_audit_logs"
+            ),
+            normalise_alert(
+                {
+                    "event_id": "gcp-event-001",
+                    "method_name": "CreateServiceAccountKey",
+                    "risk_score": 90
+                },
+                "gcp_audit_logs"
+            )
+        ]
+
+        result = deduplicate_alerts(alerts)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["alert_id"], "gcp-event-001")
+        self.assertEqual(result[0]["risk_score"], 90)
+
+    def test_different_event_ids_with_same_timestamp_are_preserved(self):
+        common_fields = {
+            "timestamp": "2026-11-15T14:43:48.113521+00:00",
+            "method_name": "EnableService",
+            "service_name": "serviceusage.googleapis.com"
+        }
+
+        alerts = [
+            normalise_alert(
+                {**common_fields, "event_id": "gcp-event-002"},
+                "gcp_audit_logs"
+            ),
+            normalise_alert(
+                {**common_fields, "event_id": "gcp-event-003"},
+                "gcp_audit_logs"
+            )
+        ]
+
+        result = deduplicate_alerts(alerts)
+
+        self.assertEqual(len(result), 2)
+        self.assertEqual(
+            {alert["alert_id"] for alert in result},
+            {"gcp-event-002", "gcp-event-003"}
+        )
+
+    def test_same_event_id_from_different_sources_is_preserved(self):
+        alerts = [
+            normalise_alert(
+                {"event_id": "gcp-event-004", "risk_score": 80},
+                "gcp_audit_logs"
+            ),
+            normalise_alert(
+                {"event_id": "gcp-event-004", "risk_score": 40},
+                "iam_security_alerts"
+            )
+        ]
+
+        result = deduplicate_alerts(alerts)
+
+        self.assertEqual(len(result), 2)
+        self.assertEqual(
+            {alert["source_module"] for alert in result},
+            {"gcp_audit_logs", "iam_security_alerts"}
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
