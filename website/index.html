@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cyber SOC - Cloud Threat Detection and Security Operations Dashboard">
+    <title>Cyber SOC | Security Operations Center</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-icon">⬡</span>
+            <span>CYBER <strong>SOC</strong></span>
+        </div>
+
+        <p class="menu-label">WORKSPACE</p>
+        <nav>
+            <a class="active" href="#overview">▦ Overview</a>
+            <a href="#alerts">⚠ Security Alerts</a>
+            <a href="#incidents">◈ Incidents</a>
+            <a href="#threats">◎ Threat Intelligence</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <span class="status-dot"></span>
+            Monitoring interface online
+            <p>Cyber SOC v1.0</p>
+        </div>
+    </aside>
+
+    <main class="main-content" id="overview">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">SECURITY OPERATIONS CENTER</p>
+                <h1>Security Overview</h1>
+                <p class="subtitle">Cloud threat detection and incident monitoring</p>
+            </div>
+            <div class="top-status">
+                <span class="status-dot"></span>
+                <span>Dashboard online</span>
+            </div>
+        </header>
+
+        <section class="notice">
+            <strong>DEMO ENVIRONMENT</strong>
+            <span>Initial demonstration data. Live GCP integration will be connected in a later step.</span>
+        </section>
+
+        <section class="metrics">
+            <article class="metric-card">
+                <p>Total Alerts</p>
+                <h2 id="totalAlerts">06</h2>
+                <span>Security events</span>
+            </article>
+
+            <article class="metric-card critical">
+                <p>Critical Alerts</p>
+                <h2 id="criticalAlerts">01</h2>
+                <span>Requires investigation</span>
+            </article>
+
+            <article class="metric-card high">
+                <p>High Alerts</p>
+                <h2 id="highAlerts">02</h2>
+                <span>High priority</span>
+            </article>
+
+            <article class="metric-card">
+                <p>Open Incidents</p>
+                <h2 id="openIncidents">03</h2>
+                <span>Under investigation</span>
+            </article>
+        </section>
+
+        <section class="dashboard-grid">
+            <article class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <h3>Alert Severity Distribution</h3>
+                        <p>Security event classification</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="severityChart"></canvas>
+                </div>
+            </article>
+
+            <article class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <h3>Monitoring Status</h3>
+                        <p>Current dashboard data source</p>
+                    </div>
+                </div>
+                <div class="monitoring-info">
+                    <div><span>GCP Audit Logs</span><strong>Pending integration</strong></div>
+                    <div><span>Detection Engine</span><strong>Demo mode</strong></div>
+                    <div><span>Simulated Scenarios</span><strong>Enabled in demo</strong></div>
+                    <div><span>Last Data Refresh</span><strong id="lastRefresh">Loading...</strong></div>
+                </div>
+            </article>
+        </section>
+
+        <section class="panel alerts-panel" id="alerts">
+            <div class="panel-heading">
+                <div>
+                    <h3>Recent Security Alerts</h3>
+                    <p>Demonstration security events</p>
+                </div>
+                <span class="live-label">DEMO DATA</span>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Alert ID</th>
+                            <th>Detection</th>
+                            <th>Source</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertTable">
+                        <tr>
+                            <td>DEMO-001</td>
+                            <td>Suspicious IAM activity</td>
+                            <td>GCP</td>
+                            <td><span class="severity critical-tag">Critical</span></td>
+                            <td>Open</td>
+                        </tr>
+                        <tr>
+                            <td>DEMO-002</td>
+                            <td>Privilege escalation scenario</td>
+                            <td>Simulation</td>
+                            <td><span class="severity high-tag">High</span></td>
+                            <td>Investigating</td>
+                        </tr>
+                        <tr>
+                            <td>DEMO-003</td>
+                            <td>Unusual service account activity</td>
+                            <td>Simulation</td>
+                            <td><span class="severity high-tag">High</span></td>
+                            <td>Open</td>
+                        </tr>
+                        <tr>
+                            <td>DEMO-004</td>
+                            <td>Audit log monitoring event</td>
+                            <td>GCP</td>
+                            <td><span class="severity medium-tag">Medium</span></td>
+                            <td>Reviewed</td>
+                        </tr>
+                        <tr>
+                            <td>DEMO-005</td>
+                            <td>Suspicious API activity</td>
+                            <td>Simulation</td>
+                            <td><span class="severity medium-tag">Medium</span></td>
+                            <td>Open</td>
+                        </tr>
+                        <tr>
+                            <td>DEMO-006</td>
+                            <td>Routine administrative activity</td>
+                            <td>GCP</td>
+                            <td><span class="severity low-tag">Low</span></td>
+                            <td>Reviewed</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer>
+            CYBER SOC © 2026 | Cloud Threat Detection & Incident Response
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
