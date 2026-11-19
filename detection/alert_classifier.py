@@ -17,6 +17,10 @@ REPORT_FILES = [
 
 OUTPUT_FILE = BASE_DIR / "reports" / "consolidated_soc_alerts.json"
 
+CORRELATION_REPORT_FILE = (
+    BASE_DIR / "reports" / "gcp_event_correlations.json"
+)
+
 
 DETECTION_RULES = {
     "GCP-IAM-001": {
@@ -109,8 +113,6 @@ DETECTION_RULES = {
     "GCP-SA-001": {
         "name": "Repeated Service Account Authentication Failures",
         "methods": [],
-        # Deliberately empty: authentication events must pass
-        # the source-specific repeated-failure check below.
         "event_types": [],
         "categories": ["REPEATED_AUTHENTICATION_FAILURES"],
         "risk_score": 60,
@@ -513,6 +515,113 @@ def load_report_records(data):
     return []
 
 
+def load_correlation_records(report_file=CORRELATION_REPORT_FILE):
+    """Safely load correlation records from the correlation report."""
+
+    try:
+        report_file = Path(report_file)
+
+        if not report_file.exists():
+            return []
+
+        with report_file.open("r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        if not isinstance(data, dict):
+            return []
+
+        correlations = data.get("correlations", [])
+
+        if not isinstance(correlations, list):
+            return []
+
+        return [
+            item for item in correlations
+            if isinstance(item, dict)
+            and item.get("correlation_id")
+            and item.get("rule_id")
+        ]
+
+    except (json.JSONDecodeError, OSError, TypeError, ValueError) as error:
+        print(
+            f"[WARNING] Could not read correlation report: {error}"
+        )
+        return []
+
+
+def normalise_correlation(correlation):
+    """Convert a correlation result into the standard SOC alert format."""
+
+    try:
+        risk_score = max(
+            0,
+            min(100, int(correlation.get("risk_score", 0)))
+        )
+    except (ValueError, TypeError):
+        risk_score = 0
+
+    evidence = correlation.get("evidence", [])
+
+    if not isinstance(evidence, list):
+        evidence = []
+
+    try:
+        event_count = int(correlation.get("event_count", len(evidence)))
+    except (ValueError, TypeError):
+        event_count = len(evidence)
+
+    event_count = max(0, event_count)
+
+    principal = (
+        correlation.get("principal_email")
+        or "unknown"
+    )
+
+    return {
+        "alert_id": str(correlation["correlation_id"]),
+        "source_module": "gcp_event_correlations",
+        "principal_or_resource": principal,
+        "category": correlation.get("rule_id", "GCP_EVENT_CORRELATION"),
+        "risk_score": risk_score,
+        "severity": classify_severity(risk_score),
+        "description": str(
+            correlation.get("description")
+            or correlation.get("rule_name")
+            or "Correlated GCP audit activity requires investigation."
+        ),
+        "timestamp": correlation.get("first_seen"),
+        "status": "OPEN",
+        "rule_id": str(correlation["rule_id"]),
+        "rule_name": str(
+            correlation.get("rule_name")
+            or "GCP Event Correlation"
+        ),
+        "confidence": str(
+            correlation.get("confidence") or "LOW"
+        ),
+        "mitre_technique_id": None,
+        "mitre_technique_name": None,
+        "evidence": {
+            "correlation_id": str(correlation["correlation_id"]),
+            "event_count": event_count,
+            "first_seen": correlation.get("first_seen"),
+            "last_seen": correlation.get("last_seen"),
+            "events": evidence
+        },
+        "recommendation": str(
+            correlation.get("recommendation")
+            or (
+                "Review the actor, affected resources, event sequence "
+                "and business justification."
+            )
+        ),
+        "detection_status": str(
+            correlation.get("detection_status")
+            or "REQUIRES_INVESTIGATION"
+        )
+    }
+
+
 def deduplicate_alerts(alerts):
     unique_alerts = {}
 
@@ -551,6 +660,7 @@ def classify_alerts(alerts):
 def main():
     all_alerts = []
 
+    # Load and normalise individual security reports.
     for report_file in REPORT_FILES:
         if not report_file.exists():
             print(
@@ -583,18 +693,51 @@ def main():
                 f"{report_file.name}: {error}"
             )
 
+    # Load and normalise correlated GCP audit events.
+    correlation_records = load_correlation_records()
+
+    print(
+        f"\nCorrelation records loaded: "
+        f"{len(correlation_records)}"
+    )
+
+    for correlation in correlation_records:
+        try:
+            all_alerts.append(
+                normalise_correlation(correlation)
+            )
+        except (KeyError, TypeError, ValueError) as error:
+            print(
+                f"[WARNING] Skipping invalid correlation record: {error}"
+            )
+
+    # Deduplicate and prioritise all SOC alerts.
     classified_alerts, summary = classify_alerts(all_alerts)
 
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
+    rule_summary = dict(
+        Counter(
+            alert["rule_id"]
+            for alert in classified_alerts
+        )
+    )
+
+    source_summary = dict(
+        Counter(
+            alert["source_module"]
+            for alert in classified_alerts
+        )
+    )
+
     report = {
         "total_alerts": len(classified_alerts),
         "severity_summary": summary,
-        "rule_summary": dict(
-            Counter(
-                alert["rule_id"]
-                for alert in classified_alerts
-            )
+        "rule_summary": rule_summary,
+        "source_summary": source_summary,
+        "correlation_alert_count": sum(
+            1 for alert in classified_alerts
+            if alert["source_module"] == "gcp_event_correlations"
         ),
         "alerts": classified_alerts
     }
@@ -604,14 +747,22 @@ def main():
 
     print("\n===== PHASE 2 GCP THREAT DETECTION ENGINE =====")
     print(f"\nTotal alerts: {len(classified_alerts)}")
+    print(
+        f"Correlation alerts: "
+        f"{report['correlation_alert_count']}"
+    )
 
     print("\nSeverity Summary:")
     for severity in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
         print(f"{severity}: {summary.get(severity, 0)}")
 
     print("\nDetection Rule Summary:")
-    for rule_id, count in report["rule_summary"].items():
+    for rule_id, count in rule_summary.items():
         print(f"{rule_id}: {count}")
+
+    print("\nSource Summary:")
+    for source, count in source_summary.items():
+        print(f"{source}: {count}")
 
     print("\nPrioritised Alerts:")
     for alert in classified_alerts:
