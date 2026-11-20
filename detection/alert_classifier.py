@@ -21,6 +21,10 @@ CORRELATION_REPORT_FILE = (
     BASE_DIR / "reports" / "gcp_event_correlations.json"
 )
 
+BEHAVIOUR_REPORT_FILE = (
+    BASE_DIR / "reports" / "gcp_behaviour_alerts.json"
+)
+
 
 DETECTION_RULES = {
     "GCP-IAM-001": {
@@ -622,6 +626,107 @@ def normalise_correlation(correlation):
     }
 
 
+def load_behaviour_records(report_file=BEHAVIOUR_REPORT_FILE):
+    """Safely load behaviour detections from the behaviour report."""
+
+    try:
+        report_file = Path(report_file)
+
+        if not report_file.exists():
+            return []
+
+        with report_file.open("r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        if not isinstance(data, dict):
+            return []
+
+        alerts = data.get("alerts", [])
+
+        if not isinstance(alerts, list):
+            return []
+
+        return [
+            item for item in alerts
+            if isinstance(item, dict)
+            and item.get("alert_id")
+            and str(item.get("rule_id", "")).startswith("BEHAV-")
+        ]
+
+    except (json.JSONDecodeError, OSError, TypeError, ValueError) as error:
+        print(
+            f"[WARNING] Could not read behaviour report: {error}"
+        )
+        return []
+
+
+def normalise_behaviour_alert(record):
+    """Convert a behaviour detection into the standard SOC alert format."""
+
+    try:
+        risk_score = max(
+            0,
+            min(100, int(record.get("risk_score", 0)))
+        )
+    except (ValueError, TypeError):
+        risk_score = 0
+
+    events = record.get("evidence", [])
+
+    if not isinstance(events, list):
+        events = []
+
+    try:
+        event_count = int(record.get("event_count", len(events)))
+    except (ValueError, TypeError):
+        event_count = len(events)
+
+    event_count = max(0, event_count)
+
+    return {
+        "alert_id": str(record["alert_id"]),
+        "source_module": "gcp_behaviour_alerts",
+        "principal_or_resource": (
+            record.get("principal_email") or "unknown"
+        ),
+        "category": str(record["rule_id"]),
+        "risk_score": risk_score,
+        "severity": classify_severity(risk_score),
+        "description": str(
+            record.get("description")
+            or record.get("rule_name")
+            or "Behavioural GCP activity requires investigation."
+        ),
+        "timestamp": record.get("first_seen"),
+        "status": "OPEN",
+        "rule_id": str(record["rule_id"]),
+        "rule_name": str(
+            record.get("rule_name") or "GCP Behaviour Anomaly"
+        ),
+        "confidence": str(record.get("confidence") or "LOW"),
+        "mitre_technique_id": record.get("mitre_technique"),
+        "mitre_technique_name": record.get("mitre_name"),
+        "evidence": {
+            "event_count": event_count,
+            "first_seen": record.get("first_seen"),
+            "last_seen": record.get("last_seen"),
+            "data_source": str(record.get("source") or "UNKNOWN"),
+            "events": events
+        },
+        "recommendation": str(
+            record.get("recommendation")
+            or (
+                "Review the principal's activity and validate its "
+                "business justification."
+            )
+        ),
+        "detection_status": str(
+            record.get("detection_status")
+            or "REQUIRES_INVESTIGATION"
+        )
+    }
+
+
 def deduplicate_alerts(alerts):
     unique_alerts = {}
 
@@ -711,6 +816,24 @@ def main():
                 f"[WARNING] Skipping invalid correlation record: {error}"
             )
 
+    # Load and normalise behaviour-based detections.
+    behaviour_records = load_behaviour_records(BEHAVIOUR_REPORT_FILE)
+
+    print(
+        f"Behaviour records loaded: "
+        f"{len(behaviour_records)}"
+    )
+
+    for record in behaviour_records:
+        try:
+            all_alerts.append(
+                normalise_behaviour_alert(record)
+            )
+        except (KeyError, TypeError, ValueError) as error:
+            print(
+                f"[WARNING] Skipping invalid behaviour record: {error}"
+            )
+
     # Deduplicate and prioritise all SOC alerts.
     classified_alerts, summary = classify_alerts(all_alerts)
 
@@ -739,6 +862,10 @@ def main():
             1 for alert in classified_alerts
             if alert["source_module"] == "gcp_event_correlations"
         ),
+        "behaviour_alert_count": sum(
+            1 for alert in classified_alerts
+            if alert["source_module"] == "gcp_behaviour_alerts"
+        ),
         "alerts": classified_alerts
     }
 
@@ -750,6 +877,10 @@ def main():
     print(
         f"Correlation alerts: "
         f"{report['correlation_alert_count']}"
+    )
+    print(
+        f"Behaviour alerts: "
+        f"{report['behaviour_alert_count']}"
     )
 
     print("\nSeverity Summary:")
