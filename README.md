@@ -4,6 +4,8 @@ A free, end-to-end Google Cloud threat detection and SOC project built in Python
 
 **Live dashboard:** https://cyber-soc.pages.dev/
 
+![Cyber SOC overview](docs/screenshots/overview.png)
+
 ## At a glance
 
 - **17 detection rules:** 11 rule-based GCP detections, 3 multi-event correlations, 3 behaviour rules, plus generic triage of all other audit events.
@@ -15,6 +17,18 @@ A free, end-to-end Google Cloud threat detection and SOC project built in Python
 - **Privacy:** the public site never shows emails, project IDs, resource names or raw logs; a leak check blocks publication otherwise.
 - **Tested:** a unit test suite plus an end-to-end test that runs a simulated attack through every pipeline stage.
 - **Free:** runs on free tiers with GCP billing disabled.
+
+## Screenshots
+
+| Prioritised alert queue | MITRE ATT&CK coverage |
+|---|---|
+| ![Prioritised alerts with P1–P4 priority, data labels and MITRE techniques](docs/screenshots/alerts.png) | ![MITRE ATT&CK coverage matrix: 7 of 14 tactics covered](docs/screenshots/mitre-coverage.png) |
+
+| Alert tuning and detection quality | Behaviour-based detection |
+|---|---|
+| ![Suppressed benign true positive with justification and expiry, roll-up and per-rule noise rates](docs/screenshots/tuning.png) | ![Behaviour rules BEHAV-001 to BEHAV-003 with triggered alert evidence](docs/screenshots/behaviour.png) |
+
+All screenshots show real pipeline output from the public site: identities are masked and real GCP data is labelled separately from synthetic training scenarios.
 
 ## Architecture
 
