@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,7 +19,9 @@
         <p class="menu-label">WORKSPACE</p>
         <nav>
             <a class="active" href="#overview">▦ Overview</a>
+            <a href="#live">◉ Live Activity</a>
             <a href="#alerts">⚠ Security Alerts</a>
+            <a href="#behaviour">◇ Behaviour Detection</a>
             <a href="#incidents">◈ Incidents</a>
             <a href="#threats">◎ Threat Intelligence</a>
         </nav>
@@ -28,7 +29,7 @@
         <div class="sidebar-bottom">
             <span class="status-dot"></span>
             Monitoring interface online
-            <p>Cyber SOC v1.0</p>
+            <p>Cyber SOC v2.0</p>
         </div>
     </aside>
 
@@ -37,7 +38,7 @@
             <div>
                 <p class="eyebrow">SECURITY OPERATIONS CENTER</p>
                 <h1>Security Overview</h1>
-                <p class="subtitle">Cloud threat detection and incident monitoring</p>
+                <p class="subtitle">GCP threat detection, correlation and behaviour analytics</p>
             </div>
             <div class="top-status">
                 <span class="status-dot"></span>
@@ -45,34 +46,34 @@
             </div>
         </header>
 
-        <section class="notice">
-            <strong>DEMO ENVIRONMENT</strong>
-            <span>Initial demonstration data. Live GCP integration will be connected in a later step.</span>
+        <section class="notice" id="dataNotice">
+            <strong>LOADING</strong>
+            <span>Loading detection results...</span>
         </section>
 
         <section class="metrics">
             <article class="metric-card">
                 <p>Total Alerts</p>
-                <h2 id="totalAlerts">06</h2>
-                <span>Security events</span>
+                <h2 id="totalAlerts">--</h2>
+                <span>Detection pipeline output</span>
             </article>
 
             <article class="metric-card critical">
                 <p>Critical Alerts</p>
-                <h2 id="criticalAlerts">01</h2>
+                <h2 id="criticalAlerts">--</h2>
                 <span>Requires investigation</span>
             </article>
 
             <article class="metric-card high">
                 <p>High Alerts</p>
-                <h2 id="highAlerts">02</h2>
+                <h2 id="highAlerts">--</h2>
                 <span>High priority</span>
             </article>
 
-            <article class="metric-card">
-                <p>Open Incidents</p>
-                <h2 id="openIncidents">03</h2>
-                <span>Under investigation</span>
+            <article class="metric-card behaviour">
+                <p>Behaviour Alerts</p>
+                <h2 id="behaviourAlerts">--</h2>
+                <span>Pattern-based detections</span>
             </article>
         </section>
 
@@ -81,7 +82,7 @@
                 <div class="panel-heading">
                     <div>
                         <h3>Alert Severity Distribution</h3>
-                        <p>Security event classification</p>
+                        <p>Risk-based classification of all alerts</p>
                     </div>
                 </div>
                 <div class="chart-container">
@@ -93,25 +94,50 @@
                 <div class="panel-heading">
                     <div>
                         <h3>Monitoring Status</h3>
-                        <p>Current dashboard data source</p>
+                        <p>Data sources and detection coverage</p>
                     </div>
                 </div>
-                <div class="monitoring-info">
-                    <div><span>GCP Audit Logs</span><strong>Pending integration</strong></div>
-                    <div><span>Detection Engine</span><strong>Demo mode</strong></div>
-                    <div><span>Simulated Scenarios</span><strong>Enabled in demo</strong></div>
-                    <div><span>Last Data Refresh</span><strong id="lastRefresh">Loading...</strong></div>
+                <div class="monitoring-info" id="monitoringInfo">
+                    <div><span>Detection Pipeline</span><strong>Loading...</strong></div>
+                    <div><span>Live GCP Audit Feed</span><strong id="liveFeedStatus">Connecting...</strong></div>
                 </div>
             </article>
+        </section>
+
+        <section class="panel alerts-panel" id="live">
+            <div class="panel-heading">
+                <div>
+                    <h3>Live GCP Activity</h3>
+                    <p>Latest Admin Activity audit events, refreshed every 5 minutes. Sanitised: no identities or resource names.</p>
+                </div>
+                <span class="live-label real-label">LIVE · REAL GCP</span>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time (IST)</th>
+                            <th>Method</th>
+                            <th>Service</th>
+                            <th>Log Severity</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="liveTable">
+                        <tr><td colspan="5">Connecting to live feed...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <section class="panel alerts-panel" id="alerts">
             <div class="panel-heading">
                 <div>
-                    <h3>Recent Security Alerts</h3>
-                    <p>Demonstration security events</p>
+                    <h3>Prioritised Security Alerts</h3>
+                    <p>Rule-based, correlation and behaviour detections, highest risk first</p>
                 </div>
-                <span class="live-label">DEMO DATA</span>
+                <span class="live-label">PIPELINE DATA</span>
             </div>
 
             <div class="table-wrapper">
@@ -120,61 +146,38 @@
                         <tr>
                             <th>Alert ID</th>
                             <th>Detection</th>
-                            <th>Source</th>
+                            <th>Data</th>
                             <th>Severity</th>
-                            <th>Status</th>
+                            <th>Risk</th>
+                            <th>MITRE ATT&amp;CK</th>
                         </tr>
                     </thead>
                     <tbody id="alertTable">
-                        <tr>
-                            <td>DEMO-001</td>
-                            <td>Suspicious IAM activity</td>
-                            <td>GCP</td>
-                            <td><span class="severity critical-tag">Critical</span></td>
-                            <td>Open</td>
-                        </tr>
-                        <tr>
-                            <td>DEMO-002</td>
-                            <td>Privilege escalation scenario</td>
-                            <td>Simulation</td>
-                            <td><span class="severity high-tag">High</span></td>
-                            <td>Investigating</td>
-                        </tr>
-                        <tr>
-                            <td>DEMO-003</td>
-                            <td>Unusual service account activity</td>
-                            <td>Simulation</td>
-                            <td><span class="severity high-tag">High</span></td>
-                            <td>Open</td>
-                        </tr>
-                        <tr>
-                            <td>DEMO-004</td>
-                            <td>Audit log monitoring event</td>
-                            <td>GCP</td>
-                            <td><span class="severity medium-tag">Medium</span></td>
-                            <td>Reviewed</td>
-                        </tr>
-                        <tr>
-                            <td>DEMO-005</td>
-                            <td>Suspicious API activity</td>
-                            <td>Simulation</td>
-                            <td><span class="severity medium-tag">Medium</span></td>
-                            <td>Open</td>
-                        </tr>
-                        <tr>
-                            <td>DEMO-006</td>
-                            <td>Routine administrative activity</td>
-                            <td>GCP</td>
-                            <td><span class="severity low-tag">Low</span></td>
-                            <td>Reviewed</td>
-                        </tr>
+                        <tr><td colspan="6">Loading alerts...</td></tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
+        <section class="panel behaviour-panel" id="behaviour">
+            <div class="panel-heading">
+                <div>
+                    <h3>Behaviour-Based Detection</h3>
+                    <p>Who acted, how often and how quickly. Signals for investigation, not proof of compromise.</p>
+                </div>
+                <span class="live-label">BEHAV RULES</span>
+            </div>
+
+            <div class="rule-grid" id="behaviourRules"></div>
+
+            <h4 class="section-label">Triggered behaviour alerts</h4>
+            <div id="behaviourAlerts-list" class="behaviour-list">
+                <p class="empty-state">Loading...</p>
+            </div>
+        </section>
+
         <footer>
-            CYBER SOC © 2026 | Cloud Threat Detection & Incident Response
+            CYBER SOC © 2026 | Cloud Threat Detection &amp; Incident Response
         </footer>
     </main>
 
