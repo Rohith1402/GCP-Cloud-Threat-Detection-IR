@@ -1,6 +1,6 @@
 {
   "source": "PYTHON_DETECTION_PIPELINE",
-  "generated_at": "2026-11-20T15:12:32.183045+00:00",
+  "generated_at": "2026-11-20T15:29:47.192395+00:00",
   "summary": {
     "total_alerts": 21,
     "severity": {
@@ -65,6 +65,267 @@
       "mitre_name": "Additional Cloud Credentials"
     }
   ],
+  "mitre_coverage": {
+    "total_tactics": 14,
+    "covered_tactics": 7,
+    "active_tactics": 6,
+    "mapped_rules": 14,
+    "total_rules": 18,
+    "unique_techniques": 9,
+    "tactics": [
+      {
+        "tactic_id": "TA0043",
+        "tactic_name": "Reconnaissance",
+        "covered": false,
+        "active": false,
+        "rule_count": 0,
+        "techniques": []
+      },
+      {
+        "tactic_id": "TA0042",
+        "tactic_name": "Resource Development",
+        "covered": false,
+        "active": false,
+        "rule_count": 0,
+        "techniques": []
+      },
+      {
+        "tactic_id": "TA0001",
+        "tactic_name": "Initial Access",
+        "covered": true,
+        "active": true,
+        "rule_count": 1,
+        "techniques": [
+          {
+            "technique_id": "T1190",
+            "technique_name": "Exploit Public-Facing Application",
+            "rules": [
+              "GCP-SCC-003"
+            ],
+            "active": true
+          }
+        ]
+      },
+      {
+        "tactic_id": "TA0002",
+        "tactic_name": "Execution",
+        "covered": false,
+        "active": false,
+        "rule_count": 0,
+        "techniques": []
+      },
+      {
+        "tactic_id": "TA0003",
+        "tactic_name": "Persistence",
+        "covered": true,
+        "active": true,
+        "rule_count": 9,
+        "techniques": [
+          {
+            "technique_id": "T1098",
+            "technique_name": "Account Manipulation",
+            "rules": [
+              "BEHAV-001",
+              "CORR-003"
+            ],
+            "active": false
+          },
+          {
+            "technique_id": "T1098.001",
+            "technique_name": "Additional Cloud Credentials",
+            "rules": [
+              "BEHAV-003",
+              "CORR-001",
+              "GCP-IAM-002"
+            ],
+            "active": true
+          },
+          {
+            "technique_id": "T1098.003",
+            "technique_name": "Additional Cloud Roles",
+            "rules": [
+              "CORR-002",
+              "GCP-IAM-001",
+              "GCP-IAM-005"
+            ],
+            "active": true
+          },
+          {
+            "technique_id": "T1136.003",
+            "technique_name": "Create Account: Cloud Account",
+            "rules": [
+              "GCP-IAM-004"
+            ],
+            "active": true
+          }
+        ]
+      },
+      {
+        "tactic_id": "TA0004",
+        "tactic_name": "Privilege Escalation",
+        "covered": true,
+        "active": true,
+        "rule_count": 9,
+        "techniques": [
+          {
+            "technique_id": "T1098",
+            "technique_name": "Account Manipulation",
+            "rules": [
+              "BEHAV-001",
+              "CORR-003"
+            ],
+            "active": false
+          },
+          {
+            "technique_id": "T1098.001",
+            "technique_name": "Additional Cloud Credentials",
+            "rules": [
+              "BEHAV-003",
+              "CORR-001",
+              "GCP-IAM-002"
+            ],
+            "active": true
+          },
+          {
+            "technique_id": "T1098.003",
+            "technique_name": "Additional Cloud Roles",
+            "rules": [
+              "CORR-002",
+              "GCP-IAM-001",
+              "GCP-IAM-005"
+            ],
+            "active": true
+          },
+          {
+            "technique_id": "T1548.005",
+            "technique_name": "Temporary Elevated Cloud Access",
+            "rules": [
+              "GCP-IAM-006"
+            ],
+            "active": true
+          }
+        ]
+      },
+      {
+        "tactic_id": "TA0005",
+        "tactic_name": "Defense Evasion",
+        "covered": true,
+        "active": true,
+        "rule_count": 1,
+        "techniques": [
+          {
+            "technique_id": "T1548.005",
+            "technique_name": "Temporary Elevated Cloud Access",
+            "rules": [
+              "GCP-IAM-006"
+            ],
+            "active": true
+          }
+        ]
+      },
+      {
+        "tactic_id": "TA0006",
+        "tactic_name": "Credential Access",
+        "covered": true,
+        "active": true,
+        "rule_count": 1,
+        "techniques": [
+          {
+            "technique_id": "T1110",
+            "technique_name": "Brute Force",
+            "rules": [
+              "GCP-SA-001"
+            ],
+            "active": true
+          }
+        ]
+      },
+      {
+        "tactic_id": "TA0007",
+        "tactic_name": "Discovery",
+        "covered": false,
+        "active": false,
+        "rule_count": 0,
+        "techniques": []
+      },
+      {
+        "tactic_id": "TA0008",
+        "tactic_name": "Lateral Movement",
+        "covered": false,
+        "active": false,
+        "rule_count": 0,
+        "techniques": []
+      },
+      {
+        "tactic_id": "TA0009",
+        "tactic_name": "Collection",
+        "covered": true,
+        "active": true,
+        "rule_count": 1,
+        "techniques": [
+          {
+            "technique_id": "T1530",
+            "technique_name": "Data from Cloud Storage",
+            "rules": [
+              "GCP-SCC-001"
+            ],
+            "active": true
+          }
+        ]
+      },
+      {
+        "tactic_id": "TA0011",
+        "tactic_name": "Command and Control",
+        "covered": false,
+        "active": false,
+        "rule_count": 0,
+        "techniques": []
+      },
+      {
+        "tactic_id": "TA0010",
+        "tactic_name": "Exfiltration",
+        "covered": false,
+        "active": false,
+        "rule_count": 0,
+        "techniques": []
+      },
+      {
+        "tactic_id": "TA0040",
+        "tactic_name": "Impact",
+        "covered": true,
+        "active": false,
+        "rule_count": 1,
+        "techniques": [
+          {
+            "technique_id": "T1531",
+            "technique_name": "Account Access Removal",
+            "rules": [
+              "GCP-IAM-003"
+            ],
+            "active": false
+          }
+        ]
+      }
+    ],
+    "unmapped_rules": [
+      {
+        "rule_id": "BEHAV-002",
+        "reason": "Repeated service enablement has no clean ATT&CK match and is usually legitimate project setup."
+      },
+      {
+        "rule_id": "GCP-SCC-002",
+        "reason": "Posture finding (excessive permissions), not adversary behaviour."
+      },
+      {
+        "rule_id": "GCP-SCC-004",
+        "reason": "Too generic to map to a specific technique without more network context."
+      },
+      {
+        "rule_id": "GENERAL-001",
+        "reason": "Generic activity, not a detection rule."
+      }
+    ]
+  },
   "alerts": [
     {
       "alert_id": "iam_privilege_alerts:user:user-01",
@@ -77,8 +338,12 @@
       "data_label": "REAL",
       "principal": "user:user-01",
       "description": "Sensitive IAM capabilities detected",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
+      "mitre_technique_id": "T1548.005",
+      "mitre_technique_name": "Temporary Elevated Cloud Access",
+      "mitre_tactics": [
+        "Privilege Escalation",
+        "Defense Evasion"
+      ],
       "timestamp": "2026-11-15T16:19:46.040796+00:00",
       "status": "OPEN",
       "recommendation": "Review effective permissions, principal, role assignment, permission combinations and change history. Determine whether the access is necessary and authorised.",
@@ -95,8 +360,11 @@
       "data_label": "SYNTHETIC",
       "principal": "Storage bucket",
       "description": "Cloud storage bucket allows public access",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
+      "mitre_technique_id": "T1530",
+      "mitre_technique_name": "Data from Cloud Storage",
+      "mitre_tactics": [
+        "Collection"
+      ],
       "timestamp": null,
       "status": "OPEN",
       "recommendation": "Verify whether public access is intended. Review bucket IAM and ACL policies, exposed data and access logs.",
@@ -115,6 +383,10 @@
       "description": "Sensitive operation detected: CreateServiceAccountKey",
       "mitre_technique_id": "T1098.001",
       "mitre_technique_name": "Additional Cloud Credentials",
+      "mitre_tactics": [
+        "Persistence",
+        "Privilege Escalation"
+      ],
       "timestamp": "2026-11-15T10:20:00Z",
       "status": "OPEN",
       "recommendation": "Verify the actor and business justification. Review key ownership, creation time, usage and rotation or revocation requirements.",
@@ -133,6 +405,10 @@
       "description": "Service account key creation detected",
       "mitre_technique_id": "T1098.001",
       "mitre_technique_name": "Additional Cloud Credentials",
+      "mitre_tactics": [
+        "Persistence",
+        "Privilege Escalation"
+      ],
       "timestamp": "2026-11-15T09:30:00Z",
       "status": "OPEN",
       "recommendation": "Verify the actor and business justification. Review key ownership, creation time, usage and rotation or revocation requirements.",
@@ -151,6 +427,7 @@
       "description": "Excessive IAM permissions detected",
       "mitre_technique_id": null,
       "mitre_technique_name": null,
+      "mitre_tactics": [],
       "timestamp": null,
       "status": "OPEN",
       "recommendation": "Review excessive permissions, affected principals and resources. Apply least privilege where appropriate.",
@@ -167,8 +444,11 @@
       "data_label": "SYNTHETIC",
       "principal": "Compute instance",
       "description": "Critical vulnerability detected on compute instance",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
+      "mitre_technique_id": "T1190",
+      "mitre_technique_name": "Exploit Public-Facing Application",
+      "mitre_tactics": [
+        "Initial Access"
+      ],
       "timestamp": null,
       "status": "OPEN",
       "recommendation": "Validate the vulnerability, affected workload, severity, exposure and available patch or mitigation.",
@@ -185,8 +465,12 @@
       "data_label": "SYNTHETIC",
       "principal": "admin@example.com",
       "description": "Sensitive operation detected: SetIamPolicy",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
+      "mitre_technique_id": "T1098.003",
+      "mitre_technique_name": "Additional Cloud Roles",
+      "mitre_tactics": [
+        "Persistence",
+        "Privilege Escalation"
+      ],
       "timestamp": "2026-11-15T10:15:00Z",
       "status": "OPEN",
       "recommendation": "Review the actor, affected resource, IAM policy changes, added or removed members, granted roles and authorisation.",
@@ -203,8 +487,12 @@
       "data_label": "SYNTHETIC",
       "principal": "admin@example.com",
       "description": "Sensitive operation detected: SetIamPolicy",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
+      "mitre_technique_id": "T1098.003",
+      "mitre_technique_name": "Additional Cloud Roles",
+      "mitre_tactics": [
+        "Persistence",
+        "Privilege Escalation"
+      ],
       "timestamp": "2026-11-15T10:30:00Z",
       "status": "OPEN",
       "recommendation": "Review the actor, affected resource, IAM policy changes, added or removed members, granted roles and authorisation.",
@@ -221,8 +509,11 @@
       "data_label": "SYNTHETIC",
       "principal": "service-account-02",
       "description": "Multiple failed authentication attempts: 5; Service account authentication failed",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
+      "mitre_technique_id": "T1110",
+      "mitre_technique_name": "Brute Force",
+      "mitre_tactics": [
+        "Credential Access"
+      ],
       "timestamp": "2026-11-15T14:20:00Z",
       "status": "OPEN",
       "recommendation": "Review failure count, authentication source, timestamps, service-account ownership and related authentication events.",
@@ -241,6 +532,7 @@
       "description": "Unusual network activity detected",
       "mitre_technique_id": null,
       "mitre_technique_name": null,
+      "mitre_tactics": [],
       "timestamp": null,
       "status": "OPEN",
       "recommendation": "Review network flow evidence, destination, source, workload and expected application behaviour.",
@@ -259,6 +551,7 @@
       "description": "Repeated service enablement operations by one principal. This activity requires contextual investigation.",
       "mitre_technique_id": null,
       "mitre_technique_name": null,
+      "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:46.734303+00:00",
       "status": "OPEN",
       "recommendation": "Review the principal's activity and validate its business justification. Investigate related audit events before taking response action.",
@@ -307,6 +600,10 @@
       "description": "Privileged role assigned: roles/owner",
       "mitre_technique_id": "T1098.003",
       "mitre_technique_name": "Additional Cloud Roles",
+      "mitre_tactics": [
+        "Persistence",
+        "Privilege Escalation"
+      ],
       "timestamp": "2026-11-15T16:19:38.967189+00:00",
       "status": "OPEN",
       "recommendation": "Verify who assigned the privileged role, when it was assigned, its scope and whether the assignment was approved.",
@@ -323,8 +620,11 @@
       "data_label": "SYNTHETIC",
       "principal": "developer@example.com",
       "description": "Sensitive operation detected: CreateServiceAccount; Failed administrative operation",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
+      "mitre_technique_id": "T1136.003",
+      "mitre_technique_name": "Create Account: Cloud Account",
+      "mitre_tactics": [
+        "Persistence"
+      ],
       "timestamp": "2026-11-15T10:25:00Z",
       "status": "OPEN",
       "recommendation": "Verify the creator, purpose, assigned roles and whether the account follows organisational policy.",
@@ -343,6 +643,7 @@
       "description": "Authentication outside configured normal hours",
       "mitre_technique_id": null,
       "mitre_technique_name": null,
+      "mitre_tactics": [],
       "timestamp": "2026-11-15T23:45:00Z",
       "status": "OPEN",
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
@@ -361,6 +662,7 @@
       "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: serviceusage.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
       "mitre_technique_id": null,
       "mitre_technique_name": null,
+      "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:48.113521+00:00",
       "status": "OPEN",
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
@@ -379,6 +681,7 @@
       "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: serviceusage.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
       "mitre_technique_id": null,
       "mitre_technique_name": null,
+      "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:48.113521+00:00",
       "status": "OPEN",
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
@@ -397,6 +700,7 @@
       "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: Unknown. This event requires contextual review and is not confirmation of malicious activity.",
       "mitre_technique_id": null,
       "mitre_technique_name": null,
+      "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:46.734303+00:00",
       "status": "OPEN",
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
@@ -415,6 +719,7 @@
       "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: serviceusage.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
       "mitre_technique_id": null,
       "mitre_technique_name": null,
+      "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:46.734303+00:00",
       "status": "OPEN",
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
@@ -433,6 +738,7 @@
       "description": "GCP Cloud Audit event: CreateProject. Service: cloudresourcemanager.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
       "mitre_technique_id": null,
       "mitre_technique_name": null,
+      "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:45.785401+00:00",
       "status": "OPEN",
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
@@ -451,6 +757,7 @@
       "description": "GCP Cloud Audit event: google.longrunning.Operations.GetOperation. Service: serviceusage.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
       "mitre_technique_id": null,
       "mitre_technique_name": null,
+      "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:48.826584+00:00",
       "status": "OPEN",
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
@@ -469,6 +776,7 @@
       "description": "GCP Cloud Audit event: google.longrunning.Operations.GetOperation. Service: serviceusage.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
       "mitre_technique_id": null,
       "mitre_technique_name": null,
+      "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:47.333818+00:00",
       "status": "OPEN",
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",

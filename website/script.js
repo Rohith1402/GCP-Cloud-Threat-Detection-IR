@@ -271,6 +271,66 @@ function renderBehaviourAlerts(data) {
     });
 }
 
+// ---------- MITRE ATT&CK coverage ----------
+
+function renderCoverage(data) {
+    const coverage = data.mitre_coverage;
+    const grid = document.getElementById("tacticGrid");
+    const unmapped = document.getElementById("unmappedList");
+    const summary = document.getElementById("coverageSummary");
+
+    if (!grid || !unmapped || !summary) return;
+
+    grid.replaceChildren();
+    unmapped.replaceChildren();
+
+    if (!coverage || !Array.isArray(coverage.tactics)) {
+        summary.textContent = "UNAVAILABLE";
+        grid.appendChild(el("p", "empty-state", "Coverage data is not available."));
+        return;
+    }
+
+    summary.textContent =
+        `${coverage.covered_tactics}/${coverage.total_tactics} TACTICS · ` +
+        `${coverage.mapped_rules}/${coverage.total_rules} RULES`;
+
+    coverage.tactics.forEach(tactic => {
+        const state = tactic.active ? "active" : tactic.covered ? "covered" : "gap";
+        const tile = el("article", "tactic-tile " + state);
+
+        tile.append(
+            el("span", "tactic-id", tactic.tactic_id),
+            el("h4", null, tactic.tactic_name)
+        );
+
+        if (!tactic.techniques.length) {
+            tile.appendChild(el("p", "muted", "No coverage yet"));
+        } else {
+            const list = el("ul", "technique-list");
+
+            tactic.techniques.forEach(technique => {
+                const item = el("li", technique.active ? "technique active" : "technique");
+                item.title = "Rules: " + technique.rules.join(", ");
+                item.append(
+                    el("span", "technique-id", technique.technique_id),
+                    el("span", null, technique.technique_name)
+                );
+                list.appendChild(item);
+            });
+
+            tile.append(list, el("p", "tactic-rules", `${tactic.rule_count} rule mapping${tactic.rule_count === 1 ? "" : "s"}`));
+        }
+
+        grid.appendChild(tile);
+    });
+
+    (coverage.unmapped_rules || []).forEach(rule => {
+        const item = el("li");
+        item.append(el("span", "rule-id", rule.rule_id), el("span", "muted", rule.reason));
+        unmapped.appendChild(item);
+    });
+}
+
 // ---------- Live GCP activity ----------
 
 const LIVE_TABLE_LIMIT = 10;
@@ -421,6 +481,7 @@ async function refreshDashboard() {
         renderAlertTable(socData);
         renderBehaviourRules(socData);
         renderBehaviourAlerts(socData);
+        renderCoverage(socData);
 
         setNotice(
             "PIPELINE RESULTS",

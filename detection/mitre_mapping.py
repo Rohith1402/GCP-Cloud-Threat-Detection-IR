@@ -162,3 +162,131 @@ def mitre_fields(rule_id):
         "mitre_technique_name": mapping["technique_name"],
         "mitre_tactics": mapping["tactics"],
     }
+
+
+# ATT&CK Enterprise tactics, in kill-chain order.
+ENTERPRISE_TACTICS = [
+    ("TA0043", "Reconnaissance"),
+    ("TA0042", "Resource Development"),
+    ("TA0001", "Initial Access"),
+    ("TA0002", "Execution"),
+    ("TA0003", "Persistence"),
+    ("TA0004", "Privilege Escalation"),
+    ("TA0005", "Defense Evasion"),
+    ("TA0006", "Credential Access"),
+    ("TA0007", "Discovery"),
+    ("TA0008", "Lateral Movement"),
+    ("TA0009", "Collection"),
+    ("TA0011", "Command and Control"),
+    ("TA0010", "Exfiltration"),
+    ("TA0040", "Impact"),
+]
+
+
+def build_coverage(fired_rules=None):
+    """
+    Build a per-tactic coverage matrix of the detection rules.
+
+    fired_rules: optional mapping or iterable of rule IDs that produced
+    alerts in the latest run. Techniques reached by those rules are
+    marked as active.
+    """
+
+    fired = set(fired_rules or [])
+    tactics = []
+
+    for tactic_id, tactic_name in ENTERPRISE_TACTICS:
+        techniques = {}
+
+        for rule_id, mapping in MITRE_MAPPINGS.items():
+            if tactic_name not in mapping["tactics"]:
+                continue
+
+            technique = techniques.setdefault(
+                mapping["technique_id"],
+                {
+                    "technique_id": mapping["technique_id"],
+                    "technique_name": mapping["technique_name"],
+                    "rules": [],
+                    "active": False,
+                },
+            )
+            technique["rules"].append(rule_id)
+
+            if rule_id in fired:
+                technique["active"] = True
+
+        technique_list = sorted(
+            techniques.values(),
+            key=lambda item: item["technique_id"],
+        )
+
+        for technique in technique_list:
+            technique["rules"].sort()
+
+        tactics.append({
+            "tactic_id": tactic_id,
+            "tactic_name": tactic_name,
+            "covered": bool(technique_list),
+            "active": any(item["active"] for item in technique_list),
+            "rule_count": sum(len(item["rules"]) for item in technique_list),
+            "techniques": technique_list,
+        })
+
+    return {
+        "total_tactics": len(tactics),
+        "covered_tactics": sum(1 for item in tactics if item["covered"]),
+        "active_tactics": sum(1 for item in tactics if item["active"]),
+        "mapped_rules": len(MITRE_MAPPINGS),
+        "total_rules": len(MITRE_MAPPINGS) + len(UNMAPPED_RULES),
+        "unique_techniques": len({
+            mapping["technique_id"] for mapping in MITRE_MAPPINGS.values()
+        }),
+        "tactics": tactics,
+        "unmapped_rules": [
+            {"rule_id": rule_id, "reason": reason}
+            for rule_id, reason in sorted(UNMAPPED_RULES.items())
+        ],
+    }
+
+
+def coverage_markdown(coverage=None):
+    """Render the coverage matrix as a Markdown table."""
+
+    coverage = coverage or build_coverage()
+    lines = [
+        "| Tactic | Techniques | Rules |",
+        "|---|---|---|",
+    ]
+
+    for tactic in coverage["tactics"]:
+        if tactic["covered"]:
+            techniques = "<br>".join(
+                f"{item['technique_id']} {item['technique_name']}"
+                for item in tactic["techniques"]
+            )
+            rules = ", ".join(
+                rule
+                for item in tactic["techniques"]
+                for rule in item["rules"]
+            )
+        else:
+            techniques, rules = "No coverage", "-"
+
+        lines.append(
+            f"| {tactic['tactic_id']} {tactic['tactic_name']} "
+            f"| {techniques} | {rules} |"
+        )
+
+    return "\n".join(lines)
+
+
+if __name__ == "__main__":
+    summary = build_coverage()
+    print(
+        f"Tactics covered: {summary['covered_tactics']} of "
+        f"{summary['total_tactics']} | Rules mapped: "
+        f"{summary['mapped_rules']} of {summary['total_rules']} | "
+        f"Unique techniques: {summary['unique_techniques']}\n"
+    )
+    print(coverage_markdown(summary))

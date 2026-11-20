@@ -195,6 +195,17 @@ class TestPublicReport(unittest.TestCase):
         self.assertEqual(summary["severity"]["CRITICAL"], 2)
         self.assertEqual(summary["data_labels"], {"REAL": 3, "SYNTHETIC": 2})
 
+    def test_mitre_coverage_is_included_and_marks_fired_rules(self):
+        coverage = self.report["mitre_coverage"]
+        tactics = {
+            item["tactic_name"]: item for item in coverage["tactics"]
+        }
+
+        self.assertEqual(coverage["total_tactics"], 14)
+        self.assertTrue(tactics["Collection"]["active"])
+        self.assertTrue(tactics["Privilege Escalation"]["active"])
+        self.assertFalse(tactics["Impact"]["active"])
+
     def test_behaviour_rule_catalogue_is_included(self):
         rule_ids = [
             rule["rule_id"] for rule in self.report["behaviour_rules"]

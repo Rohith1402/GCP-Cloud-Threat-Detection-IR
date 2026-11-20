@@ -26,8 +26,10 @@ from pathlib import Path
 
 try:
     from detection.behaviour_anomaly_detector import RULES as BEHAVIOUR_RULES
+    from detection.mitre_mapping import build_coverage
 except ImportError:  # Script run directly: python detection/<file>.py
     from behaviour_anomaly_detector import RULES as BEHAVIOUR_RULES
+    from mitre_mapping import build_coverage
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -266,6 +268,7 @@ def to_public_alert(alert):
         "description": alert.get("description"),
         "mitre_technique_id": alert.get("mitre_technique_id"),
         "mitre_technique_name": alert.get("mitre_technique_name"),
+        "mitre_tactics": list(alert.get("mitre_tactics") or []),
         "timestamp": alert.get("timestamp"),
         "status": alert.get("status"),
         "recommendation": alert.get("recommendation"),
@@ -323,6 +326,9 @@ def build_public_report(alerts, generated_at=None):
             "correlation_alerts": count_source("gcp_event_correlations"),
         },
         "behaviour_rules": behaviour_rule_catalogue(),
+        "mitre_coverage": build_coverage(
+            alert["rule_id"] for alert in public_alerts
+        ),
         "alerts": public_alerts,
     }
 

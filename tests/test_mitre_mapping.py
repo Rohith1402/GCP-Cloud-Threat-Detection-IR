@@ -10,8 +10,11 @@ from detection.alert_classifier import (
 )
 from detection.behaviour_anomaly_detector import RULES as BEHAVIOUR_RULES
 from detection.mitre_mapping import (
+    ENTERPRISE_TACTICS as TACTIC_ORDER,
     MITRE_MAPPINGS,
     UNMAPPED_RULES,
+    build_coverage,
+    coverage_markdown,
     get_mitre,
     mitre_fields,
 )
@@ -169,6 +172,72 @@ class TestClassifierUsesMapping(unittest.TestCase):
 
         self.assertEqual(mapped["mitre_technique_id"], "T1098")
         self.assertIsNone(unmapped["mitre_technique_id"])
+
+
+class TestCoverageMatrix(unittest.TestCase):
+
+    def setUp(self):
+        self.coverage = build_coverage()
+        self.tactics = {
+            item["tactic_name"]: item for item in self.coverage["tactics"]
+        }
+
+    def test_all_fourteen_tactics_in_order(self):
+        names = [item["tactic_name"] for item in self.coverage["tactics"]]
+
+        self.assertEqual(len(names), 14)
+        self.assertEqual(names, [name for _, name in TACTIC_ORDER])
+        self.assertEqual(set(names), ENTERPRISE_TACTICS)
+
+    def test_coverage_totals(self):
+        self.assertEqual(self.coverage["covered_tactics"], 7)
+        self.assertEqual(self.coverage["mapped_rules"], 14)
+        self.assertEqual(self.coverage["total_rules"], 18)
+        self.assertEqual(self.coverage["unique_techniques"], 9)
+
+    def test_gaps_are_reported_as_uncovered(self):
+        for tactic in ("Reconnaissance", "Discovery", "Exfiltration"):
+            with self.subTest(tactic=tactic):
+                self.assertFalse(self.tactics[tactic]["covered"])
+                self.assertEqual(self.tactics[tactic]["techniques"], [])
+
+    def test_every_mapped_rule_appears_under_each_of_its_tactics(self):
+        for rule_id, mapping in MITRE_MAPPINGS.items():
+            for tactic in mapping["tactics"]:
+                rules = [
+                    rule
+                    for item in self.tactics[tactic]["techniques"]
+                    for rule in item["rules"]
+                ]
+                with self.subTest(rule=rule_id, tactic=tactic):
+                    self.assertIn(rule_id, rules)
+
+    def test_techniques_are_not_duplicated_within_a_tactic(self):
+        for tactic in self.coverage["tactics"]:
+            ids = [item["technique_id"] for item in tactic["techniques"]]
+            with self.subTest(tactic=tactic["tactic_name"]):
+                self.assertEqual(len(ids), len(set(ids)))
+
+    def test_fired_rules_mark_techniques_active(self):
+        coverage = build_coverage({"GCP-SCC-001": 1})
+        tactics = {item["tactic_name"]: item for item in coverage["tactics"]}
+
+        self.assertTrue(tactics["Collection"]["active"])
+        self.assertFalse(tactics["Impact"]["active"])
+        self.assertEqual(coverage["active_tactics"], 1)
+
+    def test_no_fired_rules_means_nothing_active(self):
+        self.assertEqual(self.coverage["active_tactics"], 0)
+
+    def test_unmapped_rules_listed_with_reasons(self):
+        listed = {item["rule_id"] for item in self.coverage["unmapped_rules"]}
+        self.assertEqual(listed, set(UNMAPPED_RULES))
+
+    def test_markdown_has_one_row_per_tactic(self):
+        rows = coverage_markdown(self.coverage).splitlines()
+
+        self.assertEqual(len(rows), 2 + 14)
+        self.assertIn("No coverage", coverage_markdown(self.coverage))
 
 
 if __name__ == "__main__":

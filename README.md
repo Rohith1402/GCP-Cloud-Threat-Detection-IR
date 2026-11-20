@@ -376,27 +376,27 @@ The SOC classifier maps alerts to named detection rules with a risk score, confi
 
 | Rule | Detection | Risk | MITRE ATT&CK |
 |---|---|---:|---|
-| GCP-IAM-001 | IAM policy modification | 80 | - |
+| GCP-IAM-001 | IAM policy modification | 80 | T1098.003 |
 | GCP-IAM-002 | Service-account key creation | 90 | T1098.001 |
-| GCP-IAM-003 | Service-account key deletion | 70 | - |
-| GCP-IAM-004 | Service-account creation | 40 | - |
+| GCP-IAM-003 | Service-account key deletion | 70 | T1531 |
+| GCP-IAM-004 | Service-account creation | 40 | T1136.003 |
 | GCP-IAM-005 | Privileged IAM role assignment | 50 | T1098.003 |
-| GCP-IAM-006 | Sensitive IAM permission combination | 100 | - |
-| GCP-SA-001 | Repeated service-account authentication failures | 60 | - |
-| GCP-SCC-001 | Public storage bucket access | 100 | - |
+| GCP-IAM-006 | Sensitive IAM permission combination | 100 | T1548.005 |
+| GCP-SA-001 | Repeated service-account authentication failures | 60 | T1110 |
+| GCP-SCC-001 | Public storage bucket access | 100 | T1530 |
 | GCP-SCC-002 | Excessive IAM permissions | 90 | - |
-| GCP-SCC-003 | Critical compute vulnerability | 85 | - |
+| GCP-SCC-003 | Critical compute vulnerability | 85 | T1190 |
 | GCP-SCC-004 | Suspicious network activity | 55 | - |
 
 ### Event correlation
 
 `detection/event_correlation.py` links related audit events by the same principal:
 
-| Rule | Correlation | Risk |
-|---|---|---:|
-| CORR-001 | Service-account creation followed by key creation (60 min) | 85 |
-| CORR-002 | Service-account key creation followed by IAM policy modification (60 min) | 95 |
-| CORR-003 | Repeated sensitive administrative activity (3+ in 15 min) | 75 |
+| Rule | Correlation | Risk | MITRE ATT&CK |
+|---|---|---:|---|
+| CORR-001 | Service-account creation followed by key creation (60 min) | 85 | T1098.001 |
+| CORR-002 | Service-account key creation followed by IAM policy modification (60 min) | 95 | T1098.003 |
+| CORR-003 | Repeated sensitive administrative activity (3+ in 15 min) | 75 | T1098 |
 
 ```bash
 python3 detection/event_correlation.py
@@ -438,6 +438,46 @@ Output: `reports/gcp_behaviour_alerts.json`
 ### Live result
 
 Run against the project's real GCP Admin Activity events, BEHAV-002 fired once: four service enablements within two seconds during initial project setup. It was classified as MEDIUM severity with LOW confidence and labelled `REAL`. This is expected legitimate activity, and the rule's LOW confidence reflects that service enablement often has a valid business reason.
+
+### MITRE ATT&CK enrichment and coverage
+
+`detection/mitre_mapping.py` is the single source of truth for ATT&CK mappings. Every SOC alert (rule-based, correlation and behaviour) carries `mitre_technique_id`, `mitre_technique_name` and `mitre_tactics`.
+
+Coverage: **7 of 14 Enterprise tactics**, **14 of 18 rules** mapped, **9 unique techniques**.
+
+| Tactic | Techniques | Rules |
+|---|---|---|
+| TA0043 Reconnaissance | No coverage | - |
+| TA0042 Resource Development | No coverage | - |
+| TA0001 Initial Access | T1190 Exploit Public-Facing Application | GCP-SCC-003 |
+| TA0002 Execution | No coverage | - |
+| TA0003 Persistence | T1098 Account Manipulation<br>T1098.001 Additional Cloud Credentials<br>T1098.003 Additional Cloud Roles<br>T1136.003 Create Account: Cloud Account | BEHAV-001, CORR-003, BEHAV-003, CORR-001, GCP-IAM-002, CORR-002, GCP-IAM-001, GCP-IAM-005, GCP-IAM-004 |
+| TA0004 Privilege Escalation | T1098 Account Manipulation<br>T1098.001 Additional Cloud Credentials<br>T1098.003 Additional Cloud Roles<br>T1548.005 Temporary Elevated Cloud Access | BEHAV-001, CORR-003, BEHAV-003, CORR-001, GCP-IAM-002, CORR-002, GCP-IAM-001, GCP-IAM-005, GCP-IAM-006 |
+| TA0005 Defense Evasion | T1548.005 Temporary Elevated Cloud Access | GCP-IAM-006 |
+| TA0006 Credential Access | T1110 Brute Force | GCP-SA-001 |
+| TA0007 Discovery | No coverage | - |
+| TA0008 Lateral Movement | No coverage | - |
+| TA0009 Collection | T1530 Data from Cloud Storage | GCP-SCC-001 |
+| TA0011 Command and Control | No coverage | - |
+| TA0010 Exfiltration | No coverage | - |
+| TA0040 Impact | T1531 Account Access Removal | GCP-IAM-003 |
+
+Rules intentionally not mapped:
+
+- `BEHAV-002`: Repeated service enablement has no clean ATT&CK match and is usually legitimate project setup.
+- `GCP-SCC-002`: Posture finding (excessive permissions), not adversary behaviour.
+- `GCP-SCC-004`: Too generic to map to a specific technique without more network context.
+- `GENERAL-001`: Generic activity, not a detection rule.
+
+Leaving these unmapped is deliberate: forcing a technique onto a posture finding or generic activity would overstate coverage. The uncovered tactics are listed openly as candidates for future detections.
+
+Print the current matrix:
+
+```bash
+python3 detection/mitre_mapping.py
+```
+
+A mapped alert is not confirmation that the technique was used; it shows which adversary behaviour the rule is designed to surface.
 
 ### Public website publication
 
