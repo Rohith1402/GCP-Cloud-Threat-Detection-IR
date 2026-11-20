@@ -3,6 +3,11 @@ import json
 from pathlib import Path
 from collections import Counter
 
+try:
+    from detection.mitre_mapping import MITRE_MAPPINGS, mitre_fields
+except ImportError:  # Script run directly: python detection/<file>.py
+    from mitre_mapping import MITRE_MAPPINGS, mitre_fields
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -34,8 +39,6 @@ DETECTION_RULES = {
         "categories": [],
         "risk_score": 80,
         "confidence": "MEDIUM",
-        "mitre_id": None,
-        "mitre_name": None,
         "recommendation": (
             "Review the actor, affected resource, IAM policy changes, "
             "added or removed members, granted roles and authorisation."
@@ -48,8 +51,6 @@ DETECTION_RULES = {
         "categories": [],
         "risk_score": 90,
         "confidence": "MEDIUM",
-        "mitre_id": "T1098.001",
-        "mitre_name": "Additional Cloud Credentials",
         "recommendation": (
             "Verify the actor and business justification. Review key "
             "ownership, creation time, usage and rotation or revocation "
@@ -63,8 +64,6 @@ DETECTION_RULES = {
         "categories": [],
         "risk_score": 70,
         "confidence": "MEDIUM",
-        "mitre_id": None,
-        "mitre_name": None,
         "recommendation": (
             "Verify whether the deletion was authorised. Check for "
             "service disruption, incident response activity or "
@@ -78,8 +77,6 @@ DETECTION_RULES = {
         "categories": [],
         "risk_score": 40,
         "confidence": "LOW",
-        "mitre_id": None,
-        "mitre_name": None,
         "recommendation": (
             "Verify the creator, purpose, assigned roles and whether "
             "the account follows organisational policy."
@@ -92,8 +89,6 @@ DETECTION_RULES = {
         "categories": ["PRIVILEGED_ROLE_ASSIGNMENT"],
         "risk_score": 50,
         "confidence": "MEDIUM",
-        "mitre_id": "T1098.003",
-        "mitre_name": "Additional Cloud Roles",
         "recommendation": (
             "Verify who assigned the privileged role, when it was "
             "assigned, its scope and whether the assignment was approved."
@@ -106,8 +101,6 @@ DETECTION_RULES = {
         "categories": ["SENSITIVE_IAM_PERMISSION_COMBINATION"],
         "risk_score": 100,
         "confidence": "MEDIUM",
-        "mitre_id": None,
-        "mitre_name": None,
         "recommendation": (
             "Review effective permissions, principal, role assignment, "
             "permission combinations and change history. Determine "
@@ -121,8 +114,6 @@ DETECTION_RULES = {
         "categories": ["REPEATED_AUTHENTICATION_FAILURES"],
         "risk_score": 60,
         "confidence": "MEDIUM",
-        "mitre_id": None,
-        "mitre_name": None,
         "recommendation": (
             "Review failure count, authentication source, timestamps, "
             "service-account ownership and related authentication events."
@@ -135,8 +126,6 @@ DETECTION_RULES = {
         "categories": ["PUBLIC_BUCKET_ACCESS"],
         "risk_score": 100,
         "confidence": "MEDIUM",
-        "mitre_id": None,
-        "mitre_name": None,
         "recommendation": (
             "Verify whether public access is intended. Review bucket "
             "IAM and ACL policies, exposed data and access logs."
@@ -149,8 +138,6 @@ DETECTION_RULES = {
         "categories": ["OVER_PRIVILEGED_IAM"],
         "risk_score": 90,
         "confidence": "MEDIUM",
-        "mitre_id": None,
-        "mitre_name": None,
         "recommendation": (
             "Review excessive permissions, affected principals and "
             "resources. Apply least privilege where appropriate."
@@ -163,8 +150,6 @@ DETECTION_RULES = {
         "categories": ["CRITICAL_VULNERABILITY"],
         "risk_score": 85,
         "confidence": "MEDIUM",
-        "mitre_id": None,
-        "mitre_name": None,
         "recommendation": (
             "Validate the vulnerability, affected workload, severity, "
             "exposure and available patch or mitigation."
@@ -180,14 +165,19 @@ DETECTION_RULES = {
         ],
         "risk_score": 55,
         "confidence": "LOW",
-        "mitre_id": None,
-        "mitre_name": None,
         "recommendation": (
             "Review network flow evidence, destination, source, workload "
             "and expected application behaviour."
         )
     }
 }
+
+
+# MITRE fields come from detection/mitre_mapping.py (single source of truth).
+for _rule_id, _rule in DETECTION_RULES.items():
+    _mapping = MITRE_MAPPINGS.get(_rule_id)
+    _rule["mitre_id"] = _mapping["technique_id"] if _mapping else None
+    _rule["mitre_name"] = _mapping["technique_name"] if _mapping else None
 
 
 def classify_severity(score):
@@ -455,8 +445,7 @@ def normalise_alert(alert, source_file):
         "rule_id": rule_id or "GENERAL-001",
         "rule_name": rule["name"] if rule else "General Security Activity",
         "confidence": rule["confidence"] if rule else "LOW",
-        "mitre_technique_id": rule["mitre_id"] if rule else None,
-        "mitre_technique_name": rule["mitre_name"] if rule else None,
+        **mitre_fields(rule_id if rule else None),
         "evidence": {
             "method": method_name or None,
             "event_type": event_type or None,
@@ -603,8 +592,7 @@ def normalise_correlation(correlation):
         "confidence": str(
             correlation.get("confidence") or "LOW"
         ),
-        "mitre_technique_id": None,
-        "mitre_technique_name": None,
+        **mitre_fields(correlation["rule_id"]),
         "evidence": {
             "correlation_id": str(correlation["correlation_id"]),
             "event_count": event_count,
@@ -704,8 +692,7 @@ def normalise_behaviour_alert(record):
             record.get("rule_name") or "GCP Behaviour Anomaly"
         ),
         "confidence": str(record.get("confidence") or "LOW"),
-        "mitre_technique_id": record.get("mitre_technique"),
-        "mitre_technique_name": record.get("mitre_name"),
+        **mitre_fields(record["rule_id"]),
         "evidence": {
             "event_count": event_count,
             "first_seen": record.get("first_seen"),
@@ -911,7 +898,8 @@ def main():
             print(
                 "MITRE ATT&CK: "
                 f"{alert['mitre_technique_id']} - "
-                f"{alert['mitre_technique_name']}"
+                f"{alert['mitre_technique_name']} "
+                f"({', '.join(alert.get('mitre_tactics') or [])})"
             )
 
         print(f"Description: {alert['description']}")

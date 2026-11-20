@@ -214,6 +214,7 @@ class TestBehaviourAlertNormalisation(unittest.TestCase):
             "category", "risk_score", "severity", "description",
             "timestamp", "status", "rule_id", "rule_name",
             "confidence", "mitre_technique_id", "mitre_technique_name",
+            "mitre_tactics",
             "evidence", "recommendation", "detection_status",
         }
 

@@ -168,7 +168,7 @@ class TestPhase2DetectionRules(unittest.TestCase):
 
         self.assertEqual(rule_id, "GCP-IAM-001")
         self.assertEqual(rule["risk_score"], 80)
-        self.assertIsNone(rule["mitre_id"])
+        self.assertEqual(rule["mitre_id"], "T1098.003")
 
     def test_service_account_key_creation_rule(self):
         rule_id, rule = identify_gcp_rule(
@@ -186,7 +186,7 @@ class TestPhase2DetectionRules(unittest.TestCase):
 
         self.assertEqual(rule_id, "GCP-IAM-003")
         self.assertEqual(rule["risk_score"], 70)
-        self.assertIsNone(rule["mitre_id"])
+        self.assertEqual(rule["mitre_id"], "T1531")
 
     def test_service_account_creation_rule(self):
         rule_id, rule = identify_gcp_rule(
