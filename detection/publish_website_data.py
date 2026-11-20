@@ -27,9 +27,11 @@ from pathlib import Path
 try:
     from detection.behaviour_anomaly_detector import RULES as BEHAVIOUR_RULES
     from detection.mitre_mapping import build_coverage
+    from detection.alert_tuning import build_quality_report, load_tuning_rules
 except ImportError:  # Script run directly: python detection/<file>.py
     from behaviour_anomaly_detector import RULES as BEHAVIOUR_RULES
     from mitre_mapping import build_coverage
+    from alert_tuning import build_quality_report, load_tuning_rules
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -254,6 +256,24 @@ def public_principal(value):
     return "GCP resource" if text else "unknown"
 
 
+def public_tuning(tuning):
+    """Publish why an alert was tuned, never the match conditions."""
+
+    if not isinstance(tuning, dict):
+        return None
+
+    return {
+        key: tuning.get(key)
+        for key in (
+            "tuning_id",
+            "justification",
+            "approved_by",
+            "approved_on",
+            "expires_on",
+        )
+    }
+
+
 def to_public_alert(alert):
     return {
         "alert_id": alert.get("alert_id"),
@@ -281,7 +301,10 @@ def to_public_alert(alert):
         "mitre_technique_name": alert.get("mitre_technique_name"),
         "mitre_tactics": list(alert.get("mitre_tactics") or []),
         "timestamp": alert.get("timestamp"),
-        "status": alert.get("status"),
+        "status": alert.get("status") or "OPEN",
+        "disposition": alert.get("disposition") or "UNREVIEWED",
+        "covered_by": alert.get("covered_by"),
+        "tuning": public_tuning(alert.get("tuning")),
         "recommendation": alert.get("recommendation"),
         "evidence": evidence_summary(alert),
     }
@@ -304,7 +327,7 @@ def behaviour_rule_catalogue():
     ]
 
 
-def build_public_report(alerts, generated_at=None):
+def build_public_report(alerts, generated_at=None, tuning_rules=None):
     public_alerts = sorted(
         (to_public_alert(alert) for alert in alerts),
         key=lambda item: (
@@ -313,6 +336,11 @@ def build_public_report(alerts, generated_at=None):
         ),
         reverse=True,
     )
+
+    active = [
+        alert for alert in public_alerts
+        if alert["status"] == "OPEN"
+    ]
 
     def count_source(module):
         return sum(
@@ -327,12 +355,21 @@ def build_public_report(alerts, generated_at=None):
         ),
         "summary": {
             "total_alerts": len(public_alerts),
+            "active_alerts": len(active),
+            "suppressed_alerts": sum(
+                1 for alert in public_alerts
+                if alert["status"] == "SUPPRESSED"
+            ),
+            "rolled_up_alerts": sum(
+                1 for alert in public_alerts
+                if alert["status"] == "ROLLED_UP"
+            ),
             "severity": dict(
-                Counter(alert["severity"] for alert in public_alerts)
+                Counter(alert["severity"] for alert in active)
             ),
             "priority": dict(
                 Counter(
-                    alert["priority"] for alert in public_alerts
+                    alert["priority"] for alert in active
                     if alert["priority"]
                 )
             ),
@@ -346,6 +383,10 @@ def build_public_report(alerts, generated_at=None):
             "correlation_alerts": count_source("gcp_event_correlations"),
         },
         "behaviour_rules": behaviour_rule_catalogue(),
+        "detection_quality": build_quality_report(
+            public_alerts,
+            tuning_rules or [],
+        ),
         "mitre_coverage": build_coverage(
             alert["rule_id"] for alert in public_alerts
         ),
@@ -361,7 +402,10 @@ def build_public_report(alerts, generated_at=None):
 
 def main(input_file=INPUT_FILE, output_file=OUTPUT_FILE):
     alerts = load_consolidated_alerts(input_file)
-    report = build_public_report(alerts)
+    report = build_public_report(
+        alerts,
+        tuning_rules=load_tuning_rules(),
+    )
 
     output_file = Path(output_file)
     output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -372,7 +416,12 @@ def main(input_file=INPUT_FILE, output_file=OUTPUT_FILE):
     summary = report["summary"]
 
     print("\n===== CYBER SOC WEBSITE DATA =====")
-    print(f"\nAlerts published: {summary['total_alerts']}")
+    print(
+        f"\nAlerts published: {summary['total_alerts']} "
+        f"(active {summary['active_alerts']}, "
+        f"suppressed {summary['suppressed_alerts']}, "
+        f"rolled up {summary['rolled_up_alerts']})"
+    )
     print(f"Behaviour alerts: {summary['behaviour_alerts']}")
     print(f"Correlation alerts: {summary['correlation_alerts']}")
     print(f"Data labels: {summary['data_labels']}")

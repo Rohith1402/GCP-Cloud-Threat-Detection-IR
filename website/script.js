@@ -95,7 +95,13 @@ function updateMetrics(data) {
     const severity = data.summary.severity || {};
     const pad = value => String(value || 0).padStart(2, "0");
 
-    document.getElementById("totalAlerts").textContent = pad(data.summary.total_alerts);
+    const summary = data.summary;
+    const active = summary.active_alerts ?? summary.total_alerts;
+    const tuned = (summary.suppressed_alerts || 0) + (summary.rolled_up_alerts || 0);
+
+    document.getElementById("totalAlerts").textContent = pad(active);
+    document.getElementById("alertBreakdown").textContent =
+        `of ${summary.total_alerts} total · ${tuned} tuned`;
     document.getElementById("criticalAlerts").textContent = pad(severity.CRITICAL);
     document.getElementById("highAlerts").textContent = pad(severity.HIGH);
     document.getElementById("behaviourAlerts").textContent = pad(data.summary.behaviour_alerts);
@@ -164,16 +170,18 @@ function renderAlertTable(data) {
     const table = document.getElementById("alertTable");
     table.replaceChildren();
 
-    if (!data.alerts.length) {
+    const activeAlerts = data.alerts.filter(alert => (alert.status || "OPEN") === "OPEN");
+
+    if (!activeAlerts.length) {
         const row = el("tr");
-        const cell = el("td", null, "No alerts in the latest pipeline run.");
+        const cell = el("td", null, "No active alerts in the latest pipeline run.");
         cell.colSpan = 7;
         row.appendChild(cell);
         table.appendChild(row);
         return;
     }
 
-    data.alerts.forEach(alert => {
+    activeAlerts.forEach(alert => {
         const row = el("tr");
 
         const priorityCell = el("td");
@@ -281,6 +289,7 @@ function renderBehaviourAlerts(data) {
             el("span", null, alert.rule_name),
             badge(titleCase(alert.severity), SEVERITY_CLASSES[alert.severity] || "low-tag"),
             badge(alert.data_label, DATA_LABEL_CLASSES[alert.data_label] || "synthetic-tag"),
+            ...(alert.status === "SUPPRESSED" ? [badge("Suppressed", "synthetic-tag")] : []),
             el("span", "muted", `${evidence.event_count || 0} events · ${alert.principal || "unknown"} · ${formatTime(evidence.first_seen)}`)
         );
         details.appendChild(summary);
@@ -307,6 +316,92 @@ function renderBehaviourAlerts(data) {
 
         container.appendChild(details);
     });
+}
+
+// ---------- Tuning and detection quality ----------
+
+const DISPOSITION_LABELS = {
+    BENIGN_TRUE_POSITIVE: "Benign true positive",
+    FALSE_POSITIVE: "False positive"
+};
+
+function renderTuning(data) {
+    const suppressedList = document.getElementById("suppressedList");
+    const rolledUpList = document.getElementById("rolledUpList");
+    const qualityTable = document.getElementById("qualityTable");
+    const summary = document.getElementById("tuningSummary");
+
+    if (!suppressedList || !rolledUpList || !qualityTable || !summary) return;
+
+    suppressedList.replaceChildren();
+    rolledUpList.replaceChildren();
+    qualityTable.replaceChildren();
+
+    const suppressed = data.alerts.filter(alert => alert.status === "SUPPRESSED");
+    const rolledUp = data.alerts.filter(alert => alert.status === "ROLLED_UP");
+
+    summary.textContent = `${suppressed.length} SUPPRESSED · ${rolledUp.length} ROLLED UP`;
+
+    if (!suppressed.length) {
+        suppressedList.appendChild(el("p", "empty-state", "No suppressed alerts."));
+    }
+
+    suppressed.forEach(alert => {
+        const tuning = alert.tuning || {};
+        const card = el("article", "tuning-card");
+
+        const header = el("div", "tuning-header");
+        header.append(
+            el("span", "rule-id", alert.rule_id),
+            el("span", null, alert.rule_name || ""),
+            badge(DISPOSITION_LABELS[alert.disposition] || alert.disposition, "real-tag"),
+            badge(alert.data_label, DATA_LABEL_CLASSES[alert.data_label] || "synthetic-tag")
+        );
+
+        card.append(
+            header,
+            el("p", "recommendation", tuning.justification || ""),
+            el("p", "muted tuning-meta",
+                `${tuning.tuning_id || ""} · approved by ${tuning.approved_by || "-"} on ` +
+                `${tuning.approved_on || "-"} · expires ${tuning.expires_on || "-"}`)
+        );
+
+        suppressedList.appendChild(card);
+    });
+
+    const groups = {};
+    rolledUp.forEach(alert => {
+        (groups[alert.covered_by] = groups[alert.covered_by] || []).push(alert);
+    });
+
+    if (!rolledUp.length) {
+        rolledUpList.appendChild(el("p", "empty-state", "No rolled-up events."));
+    }
+
+    Object.entries(groups).forEach(([parent, events]) => {
+        const item = el("p", "rollup-item");
+        item.append(
+            el("strong", null, `${events.length} raw audit event${events.length === 1 ? "" : "s"}`),
+            el("span", "muted", " already counted as evidence in "),
+            el("span", "rule-id", parent)
+        );
+        rolledUpList.appendChild(item);
+    });
+
+    const quality = data.detection_quality || { rules: [] };
+
+    quality.rules
+        .slice()
+        .sort((a, b) => b.noise_rate - a.noise_rate || b.fired - a.fired)
+        .forEach(rule => {
+            const row = el("tr");
+            row.appendChild(el("td", "rule-id", rule.rule_id));
+            [rule.fired, rule.active, rule.suppressed, rule.rolled_up]
+                .forEach(value => row.appendChild(el("td", null, String(value))));
+            row.appendChild(el("td", rule.noise_rate >= 0.5 ? "noise-high" : null,
+                `${Math.round(rule.noise_rate * 100)}%`));
+            qualityTable.appendChild(row);
+        });
 }
 
 // ---------- MITRE ATT&CK coverage ----------
@@ -520,6 +615,7 @@ async function refreshDashboard() {
         renderBehaviourRules(socData);
         renderBehaviourAlerts(socData);
         renderCoverage(socData);
+        renderTuning(socData);
 
         setNotice(
             "PIPELINE RESULTS",

@@ -550,6 +550,47 @@ td .muted {
     font-size: 12px;
 }
 
+/* Tuning and detection quality */
+
+.tuning-panel {
+    margin-bottom: 25px;
+}
+
+.section-label.spaced {
+    margin-top: 24px;
+}
+
+.tuning-card {
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 14px 16px;
+}
+
+.tuning-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+}
+
+.tuning-meta {
+    font-size: 10px;
+}
+
+.rollup-item {
+    font-size: 12px;
+}
+
+.quality-table td {
+    padding: 11px 12px;
+}
+
+.noise-high {
+    color: var(--orange);
+    font-weight: 700;
+}
+
 /* MITRE ATT&CK coverage */
 
 .coverage-panel {

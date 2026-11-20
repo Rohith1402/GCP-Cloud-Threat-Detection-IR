@@ -1,19 +1,22 @@
 {
   "source": "PYTHON_DETECTION_PIPELINE",
-  "generated_at": "2026-11-20T16:18:50.368758+00:00",
+  "generated_at": "2026-11-20T16:28:09.163516+00:00",
   "summary": {
     "total_alerts": 21,
+    "active_alerts": 16,
+    "suppressed_alerts": 1,
+    "rolled_up_alerts": 4,
     "severity": {
       "CRITICAL": 5,
       "HIGH": 3,
-      "MEDIUM": 6,
-      "LOW": 7
+      "MEDIUM": 5,
+      "LOW": 3
     },
     "priority": {
       "P1": 5,
       "P2": 3,
-      "P3": 4,
-      "P4": 9
+      "P3": 3,
+      "P4": 5
     },
     "data_labels": {
       "REAL": 10,
@@ -71,6 +74,143 @@
       "mitre_name": "Additional Cloud Credentials"
     }
   ],
+  "detection_quality": {
+    "total_alerts": 21,
+    "active_alerts": 16,
+    "suppressed_alerts": 1,
+    "rolled_up_alerts": 4,
+    "rules": [
+      {
+        "rule_id": "BEHAV-002",
+        "fired": 1,
+        "active": 0,
+        "suppressed": 1,
+        "rolled_up": 0,
+        "benign_true_positive": 1,
+        "false_positive": 0,
+        "noise_rate": 1.0
+      },
+      {
+        "rule_id": "GCP-IAM-001",
+        "fired": 2,
+        "active": 2,
+        "suppressed": 0,
+        "rolled_up": 0,
+        "benign_true_positive": 0,
+        "false_positive": 0,
+        "noise_rate": 0.0
+      },
+      {
+        "rule_id": "GCP-IAM-002",
+        "fired": 2,
+        "active": 2,
+        "suppressed": 0,
+        "rolled_up": 0,
+        "benign_true_positive": 0,
+        "false_positive": 0,
+        "noise_rate": 0.0
+      },
+      {
+        "rule_id": "GCP-IAM-004",
+        "fired": 1,
+        "active": 1,
+        "suppressed": 0,
+        "rolled_up": 0,
+        "benign_true_positive": 0,
+        "false_positive": 0,
+        "noise_rate": 0.0
+      },
+      {
+        "rule_id": "GCP-IAM-005",
+        "fired": 1,
+        "active": 1,
+        "suppressed": 0,
+        "rolled_up": 0,
+        "benign_true_positive": 0,
+        "false_positive": 0,
+        "noise_rate": 0.0
+      },
+      {
+        "rule_id": "GCP-IAM-006",
+        "fired": 1,
+        "active": 1,
+        "suppressed": 0,
+        "rolled_up": 0,
+        "benign_true_positive": 0,
+        "false_positive": 0,
+        "noise_rate": 0.0
+      },
+      {
+        "rule_id": "GCP-SA-001",
+        "fired": 1,
+        "active": 1,
+        "suppressed": 0,
+        "rolled_up": 0,
+        "benign_true_positive": 0,
+        "false_positive": 0,
+        "noise_rate": 0.0
+      },
+      {
+        "rule_id": "GCP-SCC-001",
+        "fired": 1,
+        "active": 1,
+        "suppressed": 0,
+        "rolled_up": 0,
+        "benign_true_positive": 0,
+        "false_positive": 0,
+        "noise_rate": 0.0
+      },
+      {
+        "rule_id": "GCP-SCC-002",
+        "fired": 1,
+        "active": 1,
+        "suppressed": 0,
+        "rolled_up": 0,
+        "benign_true_positive": 0,
+        "false_positive": 0,
+        "noise_rate": 0.0
+      },
+      {
+        "rule_id": "GCP-SCC-003",
+        "fired": 1,
+        "active": 1,
+        "suppressed": 0,
+        "rolled_up": 0,
+        "benign_true_positive": 0,
+        "false_positive": 0,
+        "noise_rate": 0.0
+      },
+      {
+        "rule_id": "GCP-SCC-004",
+        "fired": 1,
+        "active": 1,
+        "suppressed": 0,
+        "rolled_up": 0,
+        "benign_true_positive": 0,
+        "false_positive": 0,
+        "noise_rate": 0.0
+      },
+      {
+        "rule_id": "GENERAL-001",
+        "fired": 8,
+        "active": 4,
+        "suppressed": 0,
+        "rolled_up": 4,
+        "benign_true_positive": 0,
+        "false_positive": 0,
+        "noise_rate": 0.5
+      }
+    ],
+    "tuning_rules": [
+      {
+        "tuning_id": "TUNE-001",
+        "rule_id": "BEHAV-002",
+        "disposition": "BENIGN_TRUE_POSITIVE",
+        "expires_on": "2027-02-20",
+        "state": "ACTIVE"
+      }
+    ]
+  },
   "mitre_coverage": {
     "total_tactics": 14,
     "covered_tactics": 7,
@@ -371,6 +511,9 @@
       ],
       "timestamp": "2026-11-15T16:19:46.040796+00:00",
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Review effective permissions, principal, role assignment, permission combinations and change history. Determine whether the access is necessary and authorised.",
       "evidence": null
     },
@@ -401,6 +544,9 @@
       ],
       "timestamp": null,
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Verify whether public access is intended. Review bucket IAM and ACL policies, exposed data and access logs.",
       "evidence": null
     },
@@ -437,6 +583,9 @@
       ],
       "timestamp": "2026-11-15T10:20:00Z",
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Verify the actor and business justification. Review key ownership, creation time, usage and rotation or revocation requirements.",
       "evidence": null
     },
@@ -473,6 +622,9 @@
       ],
       "timestamp": "2026-11-15T09:30:00Z",
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Verify the actor and business justification. Review key ownership, creation time, usage and rotation or revocation requirements.",
       "evidence": null
     },
@@ -501,6 +653,9 @@
       "mitre_tactics": [],
       "timestamp": null,
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Review excessive permissions, affected principals and resources. Apply least privilege where appropriate.",
       "evidence": null
     },
@@ -531,6 +686,9 @@
       ],
       "timestamp": null,
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Validate the vulnerability, affected workload, severity, exposure and available patch or mitigation.",
       "evidence": null
     },
@@ -567,6 +725,9 @@
       ],
       "timestamp": "2026-11-15T10:15:00Z",
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Review the actor, affected resource, IAM policy changes, added or removed members, granted roles and authorisation.",
       "evidence": null
     },
@@ -603,6 +764,9 @@
       ],
       "timestamp": "2026-11-15T10:30:00Z",
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Review the actor, affected resource, IAM policy changes, added or removed members, granted roles and authorisation.",
       "evidence": null
     },
@@ -638,6 +802,9 @@
       ],
       "timestamp": "2026-11-15T14:20:00Z",
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Review failure count, authentication source, timestamps, service-account ownership and related authentication events.",
       "evidence": null
     },
@@ -680,7 +847,16 @@
       "mitre_technique_name": null,
       "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:46.734303+00:00",
-      "status": "OPEN",
+      "status": "SUPPRESSED",
+      "disposition": "BENIGN_TRUE_POSITIVE",
+      "covered_by": null,
+      "tuning": {
+        "tuning_id": "TUNE-001",
+        "justification": "Service enablement during the initial setup of the lab GCP project on 15 Nov 2026 by the project owner. Verified in the audit log: all four EnableService calls followed the CreateProject event within 3 seconds. The rule worked as designed; the activity was authorised.",
+        "approved_by": "Project owner (SOC lab analyst)",
+        "approved_on": "2026-11-20",
+        "expires_on": "2027-02-20"
+      },
       "recommendation": "Review the principal's activity and validate its business justification. Investigate related audit events before taking response action.",
       "evidence": {
         "event_count": 4,
@@ -752,6 +928,9 @@
       ],
       "timestamp": "2026-11-15T16:19:38.967189+00:00",
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Verify who assigned the privileged role, when it was assigned, its scope and whether the assignment was approved.",
       "evidence": null
     },
@@ -785,6 +964,9 @@
       "mitre_tactics": [],
       "timestamp": null,
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Review network flow evidence, destination, source, workload and expected application behaviour.",
       "evidence": null
     },
@@ -820,6 +1002,9 @@
       ],
       "timestamp": "2026-11-15T10:25:00Z",
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Verify the creator, purpose, assigned roles and whether the account follows organisational policy.",
       "evidence": null
     },
@@ -853,138 +1038,9 @@
       "mitre_tactics": [],
       "timestamp": "2026-11-15T23:45:00Z",
       "status": "OPEN",
-      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
-      "evidence": null
-    },
-    {
-      "alert_id": "-vvfzwvderx8",
-      "rule_id": "GENERAL-001",
-      "rule_name": "General Security Activity",
-      "severity": "LOW",
-      "risk_score": 20,
-      "priority": "P4",
-      "priority_score": 10,
-      "score_factors": [
-        {
-          "factor": "Rule risk score",
-          "adjustment": 20,
-          "reason": "Base score from GENERAL-001"
-        },
-        {
-          "factor": "Confidence",
-          "adjustment": -10,
-          "reason": "Low confidence detection"
-        }
-      ],
-      "confidence": "LOW",
-      "source_module": "gcp_audit_logs",
-      "data_label": "REAL",
-      "principal": "user-01",
-      "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: serviceusage.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
-      "mitre_tactics": [],
-      "timestamp": "2026-11-15T14:43:48.113521+00:00",
-      "status": "OPEN",
-      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
-      "evidence": null
-    },
-    {
-      "alert_id": "-vvfzwvderx6",
-      "rule_id": "GENERAL-001",
-      "rule_name": "General Security Activity",
-      "severity": "LOW",
-      "risk_score": 20,
-      "priority": "P4",
-      "priority_score": 10,
-      "score_factors": [
-        {
-          "factor": "Rule risk score",
-          "adjustment": 20,
-          "reason": "Base score from GENERAL-001"
-        },
-        {
-          "factor": "Confidence",
-          "adjustment": -10,
-          "reason": "Low confidence detection"
-        }
-      ],
-      "confidence": "LOW",
-      "source_module": "gcp_audit_logs",
-      "data_label": "REAL",
-      "principal": "user-01",
-      "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: serviceusage.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
-      "mitre_tactics": [],
-      "timestamp": "2026-11-15T14:43:48.113521+00:00",
-      "status": "OPEN",
-      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
-      "evidence": null
-    },
-    {
-      "alert_id": "wqyfrndcjti",
-      "rule_id": "GENERAL-001",
-      "rule_name": "General Security Activity",
-      "severity": "LOW",
-      "risk_score": 20,
-      "priority": "P4",
-      "priority_score": 10,
-      "score_factors": [
-        {
-          "factor": "Rule risk score",
-          "adjustment": 20,
-          "reason": "Base score from GENERAL-001"
-        },
-        {
-          "factor": "Confidence",
-          "adjustment": -10,
-          "reason": "Low confidence detection"
-        }
-      ],
-      "confidence": "LOW",
-      "source_module": "gcp_audit_logs",
-      "data_label": "REAL",
-      "principal": "user-01",
-      "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: Unknown. This event requires contextual review and is not confirmation of malicious activity.",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
-      "mitre_tactics": [],
-      "timestamp": "2026-11-15T14:43:46.734303+00:00",
-      "status": "OPEN",
-      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
-      "evidence": null
-    },
-    {
-      "alert_id": "134p3k9d9hia",
-      "rule_id": "GENERAL-001",
-      "rule_name": "General Security Activity",
-      "severity": "LOW",
-      "risk_score": 20,
-      "priority": "P4",
-      "priority_score": 10,
-      "score_factors": [
-        {
-          "factor": "Rule risk score",
-          "adjustment": 20,
-          "reason": "Base score from GENERAL-001"
-        },
-        {
-          "factor": "Confidence",
-          "adjustment": -10,
-          "reason": "Low confidence detection"
-        }
-      ],
-      "confidence": "LOW",
-      "source_module": "gcp_audit_logs",
-      "data_label": "REAL",
-      "principal": "user-01",
-      "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: serviceusage.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
-      "mitre_tactics": [],
-      "timestamp": "2026-11-15T14:43:46.734303+00:00",
-      "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     },
@@ -1018,6 +1074,153 @@
       "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:45.785401+00:00",
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
+      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
+      "evidence": null
+    },
+    {
+      "alert_id": "-vvfzwvderx8",
+      "rule_id": "GENERAL-001",
+      "rule_name": "General Security Activity",
+      "severity": "LOW",
+      "risk_score": 20,
+      "priority": "P4",
+      "priority_score": 10,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 20,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
+      "confidence": "LOW",
+      "source_module": "gcp_audit_logs",
+      "data_label": "REAL",
+      "principal": "user-01",
+      "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: serviceusage.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
+      "mitre_technique_id": null,
+      "mitre_technique_name": null,
+      "mitre_tactics": [],
+      "timestamp": "2026-11-15T14:43:48.113521+00:00",
+      "status": "ROLLED_UP",
+      "disposition": "UNREVIEWED",
+      "covered_by": "BEHAV-002-wqyfrndcjti",
+      "tuning": null,
+      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
+      "evidence": null
+    },
+    {
+      "alert_id": "-vvfzwvderx6",
+      "rule_id": "GENERAL-001",
+      "rule_name": "General Security Activity",
+      "severity": "LOW",
+      "risk_score": 20,
+      "priority": "P4",
+      "priority_score": 10,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 20,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
+      "confidence": "LOW",
+      "source_module": "gcp_audit_logs",
+      "data_label": "REAL",
+      "principal": "user-01",
+      "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: serviceusage.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
+      "mitre_technique_id": null,
+      "mitre_technique_name": null,
+      "mitre_tactics": [],
+      "timestamp": "2026-11-15T14:43:48.113521+00:00",
+      "status": "ROLLED_UP",
+      "disposition": "UNREVIEWED",
+      "covered_by": "BEHAV-002-wqyfrndcjti",
+      "tuning": null,
+      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
+      "evidence": null
+    },
+    {
+      "alert_id": "wqyfrndcjti",
+      "rule_id": "GENERAL-001",
+      "rule_name": "General Security Activity",
+      "severity": "LOW",
+      "risk_score": 20,
+      "priority": "P4",
+      "priority_score": 10,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 20,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
+      "confidence": "LOW",
+      "source_module": "gcp_audit_logs",
+      "data_label": "REAL",
+      "principal": "user-01",
+      "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: Unknown. This event requires contextual review and is not confirmation of malicious activity.",
+      "mitre_technique_id": null,
+      "mitre_technique_name": null,
+      "mitre_tactics": [],
+      "timestamp": "2026-11-15T14:43:46.734303+00:00",
+      "status": "ROLLED_UP",
+      "disposition": "UNREVIEWED",
+      "covered_by": "BEHAV-002-wqyfrndcjti",
+      "tuning": null,
+      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
+      "evidence": null
+    },
+    {
+      "alert_id": "134p3k9d9hia",
+      "rule_id": "GENERAL-001",
+      "rule_name": "General Security Activity",
+      "severity": "LOW",
+      "risk_score": 20,
+      "priority": "P4",
+      "priority_score": 10,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 20,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
+      "confidence": "LOW",
+      "source_module": "gcp_audit_logs",
+      "data_label": "REAL",
+      "principal": "user-01",
+      "description": "GCP Cloud Audit event: google.api.serviceusage.v1.ServiceUsage.EnableService. Service: serviceusage.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
+      "mitre_technique_id": null,
+      "mitre_technique_name": null,
+      "mitre_tactics": [],
+      "timestamp": "2026-11-15T14:43:46.734303+00:00",
+      "status": "ROLLED_UP",
+      "disposition": "UNREVIEWED",
+      "covered_by": "BEHAV-002-wqyfrndcjti",
+      "tuning": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     },
@@ -1051,6 +1254,9 @@
       "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:48.826584+00:00",
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     },
@@ -1084,6 +1290,9 @@
       "mitre_tactics": [],
       "timestamp": "2026-11-15T14:43:47.333818+00:00",
       "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     }

@@ -498,6 +498,29 @@ GENERAL-001 events do not count as a signal and receive no context boosts. Synth
 
 Example from the live data: the real BEHAV-002 alert has risk score 55. Its priority score is 65 (P3): −10 for LOW confidence, +10 because the same principal holds a privileged role, and +10 because several rules fired for that principal. The consolidated report adds a `priority_summary`, and the website shows each alert's priority with the explanation on hover.
 
+### False-positive analysis and alert tuning
+
+`detection/alert_tuning.py` applies analyst-approved tuning rules from `config/alert_tuning.json` and rolls up duplicate evidence. Every alert gets:
+
+- `status`: `OPEN` (active queue), `SUPPRESSED` (matched an approved tuning rule) or `ROLLED_UP` (raw event already counted as evidence in a behaviour or correlation alert)
+- `disposition`: `UNREVIEWED`, `BENIGN_TRUE_POSITIVE` (rule correct, activity authorised) or `FALSE_POSITIVE` (rule logic wrong)
+
+Tuning controls:
+
+- Every tuning rule must have a justification, an approver and an **expiry date**. Expired rules stop matching automatically, and rules expiring within 14 days are flagged.
+- Principals are matched by the SHA-256 hash of the normalised identity, so the committed tuning file contains no email address. (An unsalted hash prevents casual exposure; it cannot stop someone confirming an address they already suspect.)
+- Suppressed and rolled-up alerts are never deleted. They are excluded from incident response and from the active priority counts, and listed with their justification.
+- Invalid tuning rules (missing expiry, unknown disposition, an email in the approver field, or a plain email instead of a hash) are rejected.
+
+Example from the live data:
+
+| Alert | Outcome | Reason |
+|---|---|---|
+| BEHAV-002 (repeated service enablement) | `SUPPRESSED`, `BENIGN_TRUE_POSITIVE` | TUNE-001: initial project setup by the owner. All four EnableService calls followed CreateProject within 3 seconds. Expires 2027-02-20. |
+| 4 × GENERAL-001 EnableService events | `ROLLED_UP` | Already evidence in the BEHAV-002 alert |
+
+Result: 21 alerts, 16 active, 1 suppressed, 4 rolled up. The consolidated report adds `active_alert_count`, `status_summary` and a `detection_quality` report: per rule, how many alerts fired, how many stayed active, were suppressed or were rolled up, and the noise rate. The website shows the same in its "Tuned Alerts & Detection Quality" section.
+
 ### Public website publication
 
 The public Cyber SOC website (https://cyber-soc.pages.dev/) shows the pipeline's results. `detection/publish_website_data.py` converts the consolidated report into `website/data/soc_alerts.json`:
@@ -519,8 +542,8 @@ The website is deployed with Cloudflare Pages from the `website/` folder of the 
 python detection/gcp_audit_log_collector.py
 python3 detection/event_correlation.py
 python3 detection/behaviour_alert_integration.py
-python3 detection/alert_classifier.py
-python3 detection/incident_response.py
+python3 detection/alert_classifier.py      # also applies config/alert_tuning.json
+python3 detection/incident_response.py     # skips suppressed and rolled-up alerts
 python3 detection/publish_website_data.py
 python3 -m streamlit run dashboard.py
 ```

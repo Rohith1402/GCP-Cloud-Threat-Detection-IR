@@ -320,13 +320,20 @@ def create_incident(alert):
 
 
 def generate_response_plan(alerts):
-    """Generate incidents for HIGH and CRITICAL alerts without duplicates."""
+    """
+    Generate incidents for active HIGH and CRITICAL alerts without
+    duplicates. Suppressed and rolled-up alerts are skipped.
+    """
 
     incidents = []
     seen_incident_ids = set()
 
     for alert in alerts:
         if not isinstance(alert, dict):
+            continue
+
+        # Tuned alerts (suppressed or rolled up) never open incidents.
+        if str(alert.get("status", "OPEN")).upper() in {"SUPPRESSED", "ROLLED_UP"}:
             continue
 
         severity = str(alert.get("severity", "")).upper()

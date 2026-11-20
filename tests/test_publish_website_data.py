@@ -206,6 +206,35 @@ class TestPublicReport(unittest.TestCase):
         self.assertTrue(tactics["Privilege Escalation"]["active"])
         self.assertFalse(tactics["Impact"]["active"])
 
+    def test_tuned_alerts_are_published_without_match_conditions(self):
+        alerts = make_alerts()
+        alerts[3].update({
+            "status": "SUPPRESSED",
+            "disposition": "BENIGN_TRUE_POSITIVE",
+            "tuning": {
+                "tuning_id": "TUNE-001",
+                "justification": "Authorised project setup.",
+                "approved_by": "SOC analyst",
+                "approved_on": "2026-11-20",
+                "expires_on": "2027-02-20",
+                "principal_sha256": "a" * 64,
+            },
+        })
+        alerts[4].update({"status": "ROLLED_UP", "covered_by": "BEHAV-002-event-1"})
+
+        report = build_public_report(alerts)
+        published = {item["alert_id"]: item for item in report["alerts"]}
+        summary = report["summary"]
+
+        self.assertEqual(published["BEHAV-002-event-1"]["tuning"]["tuning_id"], "TUNE-001")
+        self.assertNotIn("principal_sha256", published["BEHAV-002-event-1"]["tuning"])
+        self.assertEqual(published["real-event-1"]["covered_by"], "BEHAV-002-event-1")
+        self.assertEqual(summary["active_alerts"], 3)
+        self.assertEqual(summary["suppressed_alerts"], 1)
+        self.assertEqual(summary["rolled_up_alerts"], 1)
+        self.assertNotIn("MEDIUM", summary["severity"])
+        self.assertEqual(report["detection_quality"]["active_alerts"], 3)
+
     def test_behaviour_rule_catalogue_is_included(self):
         rule_ids = [
             rule["rule_id"] for rule in self.report["behaviour_rules"]

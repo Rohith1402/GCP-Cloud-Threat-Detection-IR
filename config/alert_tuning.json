@@ -1,0 +1,20 @@
+{
+  "description": "Approved alert tuning rules. Principals are stored only as SHA-256 hashes of the normalised identity. Every rule must have a justification, an approver and an expiry date.",
+  "rules": [
+    {
+      "id": "TUNE-001",
+      "rule_id": "BEHAV-002",
+      "disposition": "BENIGN_TRUE_POSITIVE",
+      "justification": "Service enablement during the initial setup of the lab GCP project on 15 Nov 2026 by the project owner. Verified in the audit log: all four EnableService calls followed the CreateProject event within 3 seconds. The rule worked as designed; the activity was authorised.",
+      "approved_by": "Project owner (SOC lab analyst)",
+      "approved_on": "2026-11-20",
+      "expires_on": "2027-02-20",
+      "match": {
+        "principal_sha256": "6efaaf12d9b72a85299843be8c1bb1617e2140a56af9d084687d321904425259",
+        "first_seen_after": "2026-11-15T14:00:00Z",
+        "first_seen_before": "2026-11-15T15:00:00Z",
+        "methods": ["EnableService"]
+      }
+    }
+  ]
+}

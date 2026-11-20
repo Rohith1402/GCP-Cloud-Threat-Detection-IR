@@ -6,9 +6,21 @@ from collections import Counter
 try:
     from detection.mitre_mapping import MITRE_MAPPINGS, mitre_fields
     from detection.risk_prioritisation import prioritise_alerts
+    from detection.alert_tuning import (
+        TUNING_FILE,
+        apply_tuning,
+        build_quality_report,
+        load_tuning_rules,
+    )
 except ImportError:  # Script run directly: python detection/<file>.py
     from mitre_mapping import MITRE_MAPPINGS, mitre_fields
     from risk_prioritisation import prioritise_alerts
+    from alert_tuning import (
+        TUNING_FILE,
+        apply_tuning,
+        build_quality_report,
+        load_tuning_rules,
+    )
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -829,6 +841,18 @@ def main():
     # Add context-aware priority (risk_score and severity are unchanged).
     classified_alerts = prioritise_alerts(classified_alerts)
 
+    # Apply approved tuning rules and roll up covered raw events.
+    tuning_rules = load_tuning_rules(TUNING_FILE)
+    classified_alerts = apply_tuning(classified_alerts, tuning_rules)
+    detection_quality = build_quality_report(
+        classified_alerts,
+        tuning_rules,
+    )
+    active_alerts = [
+        alert for alert in classified_alerts
+        if alert["status"] == "OPEN"
+    ]
+
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     rule_summary = dict(
@@ -848,12 +872,20 @@ def main():
     report = {
         "total_alerts": len(classified_alerts),
         "severity_summary": summary,
+        "active_alert_count": len(active_alerts),
         "priority_summary": dict(
             Counter(
                 alert["priority"]
+                for alert in active_alerts
+            )
+        ),
+        "status_summary": dict(
+            Counter(
+                alert["status"]
                 for alert in classified_alerts
             )
         ),
+        "detection_quality": detection_quality,
         "rule_summary": rule_summary,
         "source_summary": source_summary,
         "correlation_alert_count": sum(
@@ -885,7 +917,13 @@ def main():
     for severity in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
         print(f"{severity}: {summary.get(severity, 0)}")
 
-    print("\nPriority Summary:")
+    print(
+        f"Active alerts: {len(active_alerts)} | "
+        f"Suppressed: {detection_quality['suppressed_alerts']} | "
+        f"Rolled up: {detection_quality['rolled_up_alerts']}"
+    )
+
+    print("\nPriority Summary (active alerts):")
     for priority in ["P1", "P2", "P3", "P4"]:
         print(f"{priority}: {report['priority_summary'].get(priority, 0)}")
 
@@ -899,8 +937,12 @@ def main():
 
     print("\nPrioritised Alerts:")
     for alert in classified_alerts:
+        status_tag = (
+            "" if alert["status"] == "OPEN"
+            else f"[{alert['status']}] "
+        )
         print(
-            f"\n[{alert['priority']}] [{alert['severity']}] "
+            f"\n{status_tag}[{alert['priority']}] [{alert['severity']}] "
             f"Priority: {alert['priority_score']} | "
             f"Risk: {alert['risk_score']} | "
             f"ID: {alert['alert_id']}"

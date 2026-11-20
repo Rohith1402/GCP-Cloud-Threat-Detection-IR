@@ -22,7 +22,7 @@
             <a href="#live">◉ Live Activity</a>
             <a href="#alerts">⚠ Security Alerts</a>
             <a href="#behaviour">◇ Behaviour Detection</a>
-            <a href="#incidents">◈ Incidents</a>
+            <a href="#tuning">◈ Tuning &amp; Quality</a>
             <a href="#threats">◎ MITRE ATT&amp;CK</a>
         </nav>
 
@@ -53,9 +53,9 @@
 
         <section class="metrics">
             <article class="metric-card">
-                <p>Total Alerts</p>
+                <p>Active Alerts</p>
                 <h2 id="totalAlerts">--</h2>
-                <span>Detection pipeline output</span>
+                <span id="alertBreakdown">Detection pipeline output</span>
             </article>
 
             <article class="metric-card critical">
@@ -135,7 +135,7 @@
             <div class="panel-heading">
                 <div>
                     <h3>Prioritised Security Alerts</h3>
-                    <p>Ordered by context-aware priority. Hover a priority to see why.</p>
+                    <p>Active queue, ordered by context-aware priority. Hover a priority to see why. Tuned alerts are listed further down.</p>
                 </div>
                 <span class="live-label">PIPELINE DATA</span>
             </div>
@@ -174,6 +174,39 @@
             <h4 class="section-label">Triggered behaviour alerts</h4>
             <div id="behaviourAlerts-list" class="behaviour-list">
                 <p class="empty-state">Loading...</p>
+            </div>
+        </section>
+
+        <section class="panel tuning-panel" id="tuning">
+            <div class="panel-heading">
+                <div>
+                    <h3>Tuned Alerts &amp; Detection Quality</h3>
+                    <p>Suppressions need a justification, an approver and an expiry date. Nothing is deleted.</p>
+                </div>
+                <span class="live-label" id="tuningSummary">--</span>
+            </div>
+
+            <h4 class="section-label">Suppressed alerts</h4>
+            <div id="suppressedList" class="behaviour-list"></div>
+
+            <h4 class="section-label spaced">Rolled-up raw events</h4>
+            <div id="rolledUpList" class="behaviour-list"></div>
+
+            <h4 class="section-label spaced">Detection quality by rule</h4>
+            <div class="table-wrapper">
+                <table class="quality-table">
+                    <thead>
+                        <tr>
+                            <th>Rule</th>
+                            <th>Fired</th>
+                            <th>Active</th>
+                            <th>Suppressed</th>
+                            <th>Rolled up</th>
+                            <th>Noise rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="qualityTable"></tbody>
+                </table>
             </div>
         </section>
 
