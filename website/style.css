@@ -429,6 +429,11 @@ td .muted {
     color: var(--green);
 }
 
+.priority-badge {
+    cursor: help;
+    letter-spacing: 0.5px;
+}
+
 /* Behaviour detection */
 
 .behaviour-panel {

@@ -17,6 +17,27 @@ const SEVERITY_CLASSES = {
     LOW: "low-tag"
 };
 
+const PRIORITY_CLASSES = {
+    P1: "critical-tag",
+    P2: "high-tag",
+    P3: "medium-tag",
+    P4: "low-tag"
+};
+
+function scoreExplanation(alert) {
+    const factors = alert.score_factors || [];
+    if (!factors.length) return "";
+
+    return factors
+        .map(item => {
+            const value = item.factor === "Rule risk score"
+                ? String(item.adjustment)
+                : (item.adjustment > 0 ? "+" : "") + item.adjustment;
+            return `${item.factor}: ${value}`;
+        })
+        .join("\n") + `\n= ${alert.priority_score}`;
+}
+
 const DATA_LABEL_CLASSES = {
     REAL: "real-tag",
     SYNTHETIC: "synthetic-tag",
@@ -146,7 +167,7 @@ function renderAlertTable(data) {
     if (!data.alerts.length) {
         const row = el("tr");
         const cell = el("td", null, "No alerts in the latest pipeline run.");
-        cell.colSpan = 6;
+        cell.colSpan = 7;
         row.appendChild(cell);
         table.appendChild(row);
         return;
@@ -154,6 +175,17 @@ function renderAlertTable(data) {
 
     data.alerts.forEach(alert => {
         const row = el("tr");
+
+        const priorityCell = el("td");
+        if (alert.priority) {
+            const priorityBadge = badge(alert.priority, PRIORITY_CLASSES[alert.priority] || "low-tag");
+            priorityBadge.classList.add("priority-badge");
+            priorityBadge.title = scoreExplanation(alert);
+            priorityCell.appendChild(priorityBadge);
+        } else {
+            priorityCell.textContent = "-";
+        }
+        row.appendChild(priorityCell);
 
         row.appendChild(el("td", "mono", alert.alert_id));
 
@@ -172,7 +204,13 @@ function renderAlertTable(data) {
         severityCell.appendChild(badge(titleCase(alert.severity), SEVERITY_CLASSES[alert.severity] || "low-tag"));
         row.appendChild(severityCell);
 
-        row.appendChild(el("td", null, String(alert.risk_score)));
+        const scoreCell = el("td");
+        const changed = alert.priority_score !== undefined && alert.priority_score !== alert.risk_score;
+        scoreCell.textContent = changed
+            ? `${alert.risk_score} → ${alert.priority_score}`
+            : String(alert.risk_score);
+        if (changed) scoreCell.title = scoreExplanation(alert);
+        row.appendChild(scoreCell);
         row.appendChild(el("td", "muted", alert.mitre_technique_id
             ? `${alert.mitre_technique_id} ${alert.mitre_technique_name || ""}`
             : "-"));

@@ -135,7 +135,7 @@
             <div class="panel-heading">
                 <div>
                     <h3>Prioritised Security Alerts</h3>
-                    <p>Rule-based, correlation and behaviour detections, highest risk first</p>
+                    <p>Ordered by context-aware priority. Hover a priority to see why.</p>
                 </div>
                 <span class="live-label">PIPELINE DATA</span>
             </div>
@@ -144,16 +144,17 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>Priority</th>
                             <th>Alert ID</th>
                             <th>Detection</th>
                             <th>Data</th>
                             <th>Severity</th>
-                            <th>Risk</th>
+                            <th>Risk / Priority Score</th>
                             <th>MITRE ATT&amp;CK</th>
                         </tr>
                     </thead>
                     <tbody id="alertTable">
-                        <tr><td colspan="6">Loading alerts...</td></tr>
+                        <tr><td colspan="7">Loading alerts...</td></tr>
                     </tbody>
                 </table>
             </div>

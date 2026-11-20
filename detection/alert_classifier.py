@@ -5,8 +5,10 @@ from collections import Counter
 
 try:
     from detection.mitre_mapping import MITRE_MAPPINGS, mitre_fields
+    from detection.risk_prioritisation import prioritise_alerts
 except ImportError:  # Script run directly: python detection/<file>.py
     from mitre_mapping import MITRE_MAPPINGS, mitre_fields
+    from risk_prioritisation import prioritise_alerts
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -824,6 +826,9 @@ def main():
     # Deduplicate and prioritise all SOC alerts.
     classified_alerts, summary = classify_alerts(all_alerts)
 
+    # Add context-aware priority (risk_score and severity are unchanged).
+    classified_alerts = prioritise_alerts(classified_alerts)
+
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     rule_summary = dict(
@@ -843,6 +848,12 @@ def main():
     report = {
         "total_alerts": len(classified_alerts),
         "severity_summary": summary,
+        "priority_summary": dict(
+            Counter(
+                alert["priority"]
+                for alert in classified_alerts
+            )
+        ),
         "rule_summary": rule_summary,
         "source_summary": source_summary,
         "correlation_alert_count": sum(
@@ -874,6 +885,10 @@ def main():
     for severity in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
         print(f"{severity}: {summary.get(severity, 0)}")
 
+    print("\nPriority Summary:")
+    for priority in ["P1", "P2", "P3", "P4"]:
+        print(f"{priority}: {report['priority_summary'].get(priority, 0)}")
+
     print("\nDetection Rule Summary:")
     for rule_id, count in rule_summary.items():
         print(f"{rule_id}: {count}")
@@ -885,8 +900,9 @@ def main():
     print("\nPrioritised Alerts:")
     for alert in classified_alerts:
         print(
-            f"\n[{alert['severity']}] "
-            f"Score: {alert['risk_score']} | "
+            f"\n[{alert['priority']}] [{alert['severity']}] "
+            f"Priority: {alert['priority_score']} | "
+            f"Risk: {alert['risk_score']} | "
             f"ID: {alert['alert_id']}"
         )
         print(f"Rule: {alert['rule_id']} - {alert['rule_name']}")

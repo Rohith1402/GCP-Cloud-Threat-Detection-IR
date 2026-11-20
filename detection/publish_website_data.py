@@ -261,6 +261,17 @@ def to_public_alert(alert):
         "rule_name": alert.get("rule_name"),
         "severity": str(alert.get("severity") or "LOW").upper(),
         "risk_score": alert.get("risk_score", 0),
+        "priority": alert.get("priority"),
+        "priority_score": alert.get("priority_score", alert.get("risk_score", 0)),
+        "score_factors": [
+            {
+                "factor": item.get("factor"),
+                "adjustment": item.get("adjustment"),
+                "reason": item.get("reason"),
+            }
+            for item in alert.get("score_factors") or []
+            if isinstance(item, dict)
+        ],
         "confidence": alert.get("confidence"),
         "source_module": alert.get("source_module"),
         "data_label": data_label(alert),
@@ -296,7 +307,10 @@ def behaviour_rule_catalogue():
 def build_public_report(alerts, generated_at=None):
     public_alerts = sorted(
         (to_public_alert(alert) for alert in alerts),
-        key=lambda item: item["risk_score"] or 0,
+        key=lambda item: (
+            item["priority_score"] or 0,
+            item["risk_score"] or 0,
+        ),
         reverse=True,
     )
 
@@ -315,6 +329,12 @@ def build_public_report(alerts, generated_at=None):
             "total_alerts": len(public_alerts),
             "severity": dict(
                 Counter(alert["severity"] for alert in public_alerts)
+            ),
+            "priority": dict(
+                Counter(
+                    alert["priority"] for alert in public_alerts
+                    if alert["priority"]
+                )
             ),
             "data_labels": dict(
                 Counter(alert["data_label"] for alert in public_alerts)

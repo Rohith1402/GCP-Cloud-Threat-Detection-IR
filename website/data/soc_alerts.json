@@ -1,6 +1,6 @@
 {
   "source": "PYTHON_DETECTION_PIPELINE",
-  "generated_at": "2026-11-20T15:29:47.192395+00:00",
+  "generated_at": "2026-11-20T16:18:50.368758+00:00",
   "summary": {
     "total_alerts": 21,
     "severity": {
@@ -8,6 +8,12 @@
       "HIGH": 3,
       "MEDIUM": 6,
       "LOW": 7
+    },
+    "priority": {
+      "P1": 5,
+      "P2": 3,
+      "P3": 4,
+      "P4": 9
     },
     "data_labels": {
       "REAL": 10,
@@ -21,9 +27,9 @@
       "GCP-SCC-003": 1,
       "GCP-IAM-001": 2,
       "GCP-SA-001": 1,
-      "GCP-SCC-004": 1,
       "BEHAV-002": 1,
       "GCP-IAM-005": 1,
+      "GCP-SCC-004": 1,
       "GCP-IAM-004": 1,
       "GENERAL-001": 8
     },
@@ -333,6 +339,25 @@
       "rule_name": "Sensitive IAM Permission Combination",
       "severity": "CRITICAL",
       "risk_score": 100,
+      "priority": "P1",
+      "priority_score": 100,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 100,
+          "reason": "Base score from GCP-IAM-006"
+        },
+        {
+          "factor": "Multiple signals",
+          "adjustment": 10,
+          "reason": "3 different rules fired for this principal"
+        },
+        {
+          "factor": "High-impact tactic",
+          "adjustment": 5,
+          "reason": "MITRE tactic: Privilege Escalation"
+        }
+      ],
       "confidence": "MEDIUM",
       "source_module": "iam_privilege_alerts",
       "data_label": "REAL",
@@ -355,6 +380,15 @@
       "rule_name": "Public Storage Bucket Access",
       "severity": "CRITICAL",
       "risk_score": 100,
+      "priority": "P1",
+      "priority_score": 100,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 100,
+          "reason": "Base score from GCP-SCC-001"
+        }
+      ],
       "confidence": "MEDIUM",
       "source_module": "scc_security_alerts",
       "data_label": "SYNTHETIC",
@@ -376,6 +410,20 @@
       "rule_name": "Service Account Key Creation",
       "severity": "CRITICAL",
       "risk_score": 90,
+      "priority": "P1",
+      "priority_score": 95,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 90,
+          "reason": "Base score from GCP-IAM-002"
+        },
+        {
+          "factor": "High-impact tactic",
+          "adjustment": 5,
+          "reason": "MITRE tactic: Privilege Escalation"
+        }
+      ],
       "confidence": "MEDIUM",
       "source_module": "audit_log_alerts",
       "data_label": "SYNTHETIC",
@@ -398,6 +446,20 @@
       "rule_name": "Service Account Key Creation",
       "severity": "CRITICAL",
       "risk_score": 90,
+      "priority": "P1",
+      "priority_score": 95,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 90,
+          "reason": "Base score from GCP-IAM-002"
+        },
+        {
+          "factor": "High-impact tactic",
+          "adjustment": 5,
+          "reason": "MITRE tactic: Privilege Escalation"
+        }
+      ],
       "confidence": "MEDIUM",
       "source_module": "service_account_alerts",
       "data_label": "SYNTHETIC",
@@ -420,6 +482,15 @@
       "rule_name": "Excessive IAM Permissions",
       "severity": "CRITICAL",
       "risk_score": 90,
+      "priority": "P1",
+      "priority_score": 90,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 90,
+          "reason": "Base score from GCP-SCC-002"
+        }
+      ],
       "confidence": "MEDIUM",
       "source_module": "scc_security_alerts",
       "data_label": "SYNTHETIC",
@@ -439,6 +510,15 @@
       "rule_name": "Critical Compute Vulnerability",
       "severity": "HIGH",
       "risk_score": 85,
+      "priority": "P2",
+      "priority_score": 85,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 85,
+          "reason": "Base score from GCP-SCC-003"
+        }
+      ],
       "confidence": "MEDIUM",
       "source_module": "scc_security_alerts",
       "data_label": "SYNTHETIC",
@@ -460,6 +540,20 @@
       "rule_name": "IAM Policy Modification",
       "severity": "HIGH",
       "risk_score": 80,
+      "priority": "P2",
+      "priority_score": 85,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 80,
+          "reason": "Base score from GCP-IAM-001"
+        },
+        {
+          "factor": "High-impact tactic",
+          "adjustment": 5,
+          "reason": "MITRE tactic: Privilege Escalation"
+        }
+      ],
       "confidence": "MEDIUM",
       "source_module": "audit_log_alerts",
       "data_label": "SYNTHETIC",
@@ -482,6 +576,20 @@
       "rule_name": "IAM Policy Modification",
       "severity": "HIGH",
       "risk_score": 80,
+      "priority": "P2",
+      "priority_score": 85,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 80,
+          "reason": "Base score from GCP-IAM-001"
+        },
+        {
+          "factor": "High-impact tactic",
+          "adjustment": 5,
+          "reason": "MITRE tactic: Privilege Escalation"
+        }
+      ],
       "confidence": "MEDIUM",
       "source_module": "audit_log_alerts",
       "data_label": "SYNTHETIC",
@@ -504,6 +612,20 @@
       "rule_name": "Repeated Service Account Authentication Failures",
       "severity": "MEDIUM",
       "risk_score": 60,
+      "priority": "P3",
+      "priority_score": 65,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 60,
+          "reason": "Base score from GCP-SA-001"
+        },
+        {
+          "factor": "High-impact tactic",
+          "adjustment": 5,
+          "reason": "MITRE tactic: Credential Access"
+        }
+      ],
       "confidence": "MEDIUM",
       "source_module": "service_account_alerts",
       "data_label": "SYNTHETIC",
@@ -520,30 +642,35 @@
       "evidence": null
     },
     {
-      "alert_id": "scc-004",
-      "rule_id": "GCP-SCC-004",
-      "rule_name": "Suspicious Network Activity",
-      "severity": "MEDIUM",
-      "risk_score": 55,
-      "confidence": "LOW",
-      "source_module": "scc_security_alerts",
-      "data_label": "SYNTHETIC",
-      "principal": "Compute instance",
-      "description": "Unusual network activity detected",
-      "mitre_technique_id": null,
-      "mitre_technique_name": null,
-      "mitre_tactics": [],
-      "timestamp": null,
-      "status": "OPEN",
-      "recommendation": "Review network flow evidence, destination, source, workload and expected application behaviour.",
-      "evidence": null
-    },
-    {
       "alert_id": "BEHAV-002-wqyfrndcjti",
       "rule_id": "BEHAV-002",
       "rule_name": "Repeated Service Enablement",
       "severity": "MEDIUM",
       "risk_score": 55,
+      "priority": "P3",
+      "priority_score": 65,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 55,
+          "reason": "Base score from BEHAV-002"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        },
+        {
+          "factor": "Privileged principal",
+          "adjustment": 10,
+          "reason": "Principal also has privilege findings: GCP-IAM-005, GCP-IAM-006"
+        },
+        {
+          "factor": "Multiple signals",
+          "adjustment": 10,
+          "reason": "3 different rules fired for this principal"
+        }
+      ],
       "confidence": "LOW",
       "source_module": "gcp_behaviour_alerts",
       "data_label": "REAL",
@@ -593,6 +720,25 @@
       "rule_name": "Privileged IAM Role Assignment",
       "severity": "MEDIUM",
       "risk_score": 50,
+      "priority": "P3",
+      "priority_score": 65,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 50,
+          "reason": "Base score from GCP-IAM-005"
+        },
+        {
+          "factor": "Multiple signals",
+          "adjustment": 10,
+          "reason": "3 different rules fired for this principal"
+        },
+        {
+          "factor": "High-impact tactic",
+          "adjustment": 5,
+          "reason": "MITRE tactic: Privilege Escalation"
+        }
+      ],
       "confidence": "MEDIUM",
       "source_module": "iam_security_alerts",
       "data_label": "REAL",
@@ -610,11 +756,58 @@
       "evidence": null
     },
     {
+      "alert_id": "scc-004",
+      "rule_id": "GCP-SCC-004",
+      "rule_name": "Suspicious Network Activity",
+      "severity": "MEDIUM",
+      "risk_score": 55,
+      "priority": "P3",
+      "priority_score": 45,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 55,
+          "reason": "Base score from GCP-SCC-004"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
+      "confidence": "LOW",
+      "source_module": "scc_security_alerts",
+      "data_label": "SYNTHETIC",
+      "principal": "Compute instance",
+      "description": "Unusual network activity detected",
+      "mitre_technique_id": null,
+      "mitre_technique_name": null,
+      "mitre_tactics": [],
+      "timestamp": null,
+      "status": "OPEN",
+      "recommendation": "Review network flow evidence, destination, source, workload and expected application behaviour.",
+      "evidence": null
+    },
+    {
       "alert_id": "audit-003",
       "rule_id": "GCP-IAM-004",
       "rule_name": "Service Account Creation",
       "severity": "MEDIUM",
       "risk_score": 40,
+      "priority": "P4",
+      "priority_score": 30,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 40,
+          "reason": "Base score from GCP-IAM-004"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
       "confidence": "LOW",
       "source_module": "audit_log_alerts",
       "data_label": "SYNTHETIC",
@@ -636,6 +829,20 @@
       "rule_name": "General Security Activity",
       "severity": "MEDIUM",
       "risk_score": 30,
+      "priority": "P4",
+      "priority_score": 20,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 30,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
       "confidence": "LOW",
       "source_module": "service_account_alerts",
       "data_label": "SYNTHETIC",
@@ -655,6 +862,20 @@
       "rule_name": "General Security Activity",
       "severity": "LOW",
       "risk_score": 20,
+      "priority": "P4",
+      "priority_score": 10,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 20,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
       "confidence": "LOW",
       "source_module": "gcp_audit_logs",
       "data_label": "REAL",
@@ -674,6 +895,20 @@
       "rule_name": "General Security Activity",
       "severity": "LOW",
       "risk_score": 20,
+      "priority": "P4",
+      "priority_score": 10,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 20,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
       "confidence": "LOW",
       "source_module": "gcp_audit_logs",
       "data_label": "REAL",
@@ -693,6 +928,20 @@
       "rule_name": "General Security Activity",
       "severity": "LOW",
       "risk_score": 20,
+      "priority": "P4",
+      "priority_score": 10,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 20,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
       "confidence": "LOW",
       "source_module": "gcp_audit_logs",
       "data_label": "REAL",
@@ -712,6 +961,20 @@
       "rule_name": "General Security Activity",
       "severity": "LOW",
       "risk_score": 20,
+      "priority": "P4",
+      "priority_score": 10,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 20,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
       "confidence": "LOW",
       "source_module": "gcp_audit_logs",
       "data_label": "REAL",
@@ -731,6 +994,20 @@
       "rule_name": "General Security Activity",
       "severity": "LOW",
       "risk_score": 20,
+      "priority": "P4",
+      "priority_score": 10,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 20,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
       "confidence": "LOW",
       "source_module": "gcp_audit_logs",
       "data_label": "REAL",
@@ -750,6 +1027,20 @@
       "rule_name": "General Security Activity",
       "severity": "LOW",
       "risk_score": 5,
+      "priority": "P4",
+      "priority_score": 0,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 5,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
       "confidence": "LOW",
       "source_module": "gcp_audit_logs",
       "data_label": "REAL",
@@ -769,6 +1060,20 @@
       "rule_name": "General Security Activity",
       "severity": "LOW",
       "risk_score": 5,
+      "priority": "P4",
+      "priority_score": 0,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 5,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
       "confidence": "LOW",
       "source_module": "gcp_audit_logs",
       "data_label": "REAL",

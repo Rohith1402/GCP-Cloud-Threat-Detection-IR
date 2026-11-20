@@ -479,6 +479,25 @@ python3 detection/mitre_mapping.py
 
 A mapped alert is not confirmation that the technique was used; it shows which adversary behaviour the rule is designed to surface.
 
+### Risk scoring and prioritisation
+
+`detection/risk_prioritisation.py` adds context to the rule-based score. Each alert keeps its `risk_score` and `severity` (the rule's verdict, also used by incident response) and gains:
+
+- `priority_score`: the risk score adjusted for context, capped to 0–100
+- `priority`: P1 (≥ 90), P2 (70–89), P3 (40–69), P4 (< 40)
+- `score_factors`: every adjustment applied and why
+
+| Factor | Adjustment |
+|---|---:|
+| Confidence | HIGH +5, MEDIUM 0, LOW −10 |
+| Privileged principal (same identity has a GCP-IAM-005 or GCP-IAM-006 finding) | +10 |
+| Multiple signals (two or more different rules fired for the same identity) | +10 |
+| High-impact MITRE tactic (Privilege Escalation, Credential Access, Impact) | +5 |
+
+GENERAL-001 events do not count as a signal and receive no context boosts. Synthetic and simulated alerts are not down-weighted; the `REAL` / `SYNTHETIC` label already separates them.
+
+Example from the live data: the real BEHAV-002 alert has risk score 55. Its priority score is 65 (P3): −10 for LOW confidence, +10 because the same principal holds a privileged role, and +10 because several rules fired for that principal. The consolidated report adds a `priority_summary`, and the website shows each alert's priority with the explanation on hover.
+
 ### Public website publication
 
 The public Cyber SOC website (https://cyber-soc.pages.dev/) shows the pipeline's results. `detection/publish_website_data.py` converts the consolidated report into `website/data/soc_alerts.json`:
