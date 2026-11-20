@@ -373,6 +373,13 @@ def _identify_rule(alert, source_file):
     )
 
 
+def raw_event_data_source(alert):
+    """Label a collected audit event as REAL or SIMULATED from its source."""
+
+    source = str(alert.get("source") or "").upper()
+    return "SIMULATED" if "SIMULATED" in source else "REAL"
+
+
 def normalise_alert(alert, source_file):
     method_name = (
         alert.get("method_name")
@@ -470,6 +477,10 @@ def normalise_alert(alert, source_file):
             ),
             "risky_permissions": sorted(
                 _extract_risky_permissions(alert)
+            ),
+            **(
+                {"data_source": raw_event_data_source(alert)}
+                if is_gcp else {}
             )
         },
         "recommendation": (

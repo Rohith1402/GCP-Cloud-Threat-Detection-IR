@@ -1,56 +1,86 @@
 # GCP Cloud Threat Detection & Incident Response
 
-A hands-on Google Cloud security monitoring and threat detection project built using Python.
+A free, end-to-end Google Cloud threat detection and SOC project built in Python. It collects real GCP Admin Activity audit logs, runs rule-based, correlation and behaviour detections, enriches every alert with MITRE ATT&CK, prioritises alerts with explainable context scoring, tunes out authorised activity with expiring suppressions, simulates incident response, and publishes sanitised results to a public SOC dashboard.
 
-This project demonstrates practical cloud security monitoring, IAM risk analysis, Cloud Audit Logs collection, security alert classification, SOC investigation, and simulation-based incident response.
+**Live dashboard:** https://cyber-soc.pages.dev/
 
-## Project Objectives
+## At a glance
 
-- Identify potentially risky GCP IAM role assignments.
-- Analyse cloud IAM policies and privileged permissions.
-- Detect public and broadly accessible principals.
-- Collect and analyse GCP Cloud Audit Logs.
-- Identify suspicious service-account activities.
-- Analyse Security Command Center findings.
-- Generate structured security alerts.
-- Classify and prioritise findings based on risk scores and severity.
-- Consolidate alerts into a unified SOC workflow.
-- Generate incident response recommendations.
-- Visualise security events through an interactive SOC dashboard.
+- **17 detection rules:** 11 rule-based GCP detections, 3 multi-event correlations, 3 behaviour rules, plus generic triage of all other audit events.
+- **MITRE ATT&CK:** 14 of 18 rules mapped to 9 techniques across 7 of 14 Enterprise tactics. Unmapped rules and uncovered tactics are listed openly.
+- **Prioritisation:** P1–P4 priority with a per-alert explanation of every score adjustment.
+- **Tuning:** analyst dispositions, expiring suppressions with justification, roll-up of duplicate evidence, and a per-rule noise report.
+- **Incident response:** lifecycle with persistence, analyst approval, simulation-only actions.
+- **Real vs simulated:** every alert is labelled REAL, SIMULATED, SYNTHETIC or MIXED from its own evidence.
+- **Privacy:** the public site never shows emails, project IDs, resource names or raw logs; a leak check blocks publication otherwise.
+- **Tested:** a unit test suite plus an end-to-end test that runs a simulated attack through every pipeline stage.
+- **Free:** runs on free tiers with GCP billing disabled.
 
-## Project Architecture
+## Architecture
 
-The project contains eight security modules:
+```mermaid
+flowchart LR
+    GCP["GCP Admin Activity<br/>audit logs"] --> COL["gcp_audit_log_collector.py"]
+    TRAIN["IAM policy export +<br/>synthetic training data"] --> MOD["Detection modules 1–5<br/>IAM, privilege, audit, SA, SCC"]
 
-1. GCP IAM Misconfiguration Detection
-2. IAM Privilege Escalation Detection
-3. Cloud Audit Logs Monitoring
-4. Suspicious Service Account Activity Detection
-5. Security Command Center Findings Analysis
-6. Unified SOC Alert Classification Engine
-7. Incident Response Automation
-8. SOC Security Dashboard and Reporting
+    COL --> CORR["event_correlation.py<br/>CORR-001…003"]
+    COL --> BEH["behaviour_alert_integration.py<br/>BEHAV-001…003"]
+    COL --> CLS
+    MOD --> CLS
+    CORR --> CLS
+    BEH --> CLS
+    TUNE["config/alert_tuning.json"] --> CLS
 
-Later phases extend the pipeline:
+    CLS["alert_classifier.py<br/>rules · MITRE ATT&CK ·<br/>P1–P4 priority · tuning"] --> IR["incident_response.py<br/>simulation-only"]
+    CLS --> PUB["publish_website_data.py<br/>sanitise + leak check"]
+    CLS --> DASH["dashboard.py<br/>local Streamlit"]
 
-- **Phase 2:** rule-based GCP detections with MITRE ATT&CK mapping (`GCP-IAM-*`, `GCP-SA-*`, `GCP-SCC-*`) and multi-event correlation (`CORR-001` to `CORR-003`).
-- **Phase 3:** incident response lifecycle with persistence and simulation-only response actions.
-- **Phase 4:** behaviour-based anomaly detection (`BEHAV-001` to `BEHAV-003`) and publication of sanitised results to the public Cyber SOC website.
+    PUB --> SITE["cyber-soc.pages.dev<br/>Cloudflare Pages"]
+    APPS["Apps Script collector<br/>every 5 min, sanitised"] --> SITE
+```
 
-The project combines synthetic security training datasets with an on-demand integration that retrieves real GCP Admin Activity audit events.
+## Quick start
+
+```bash
+python3 -m pip install -r requirements.txt
+
+python detection/gcp_audit_log_collector.py      # collect real audit events (needs gcloud auth)
+python3 detection/event_correlation.py           # CORR rules
+python3 detection/behaviour_alert_integration.py # BEHAV rules
+python3 detection/alert_classifier.py            # rules, MITRE, priority, tuning
+python3 detection/incident_response.py           # simulation-only incidents
+python3 detection/publish_website_data.py        # sanitised website data
+
+python -m pytest -q                              # full test suite, incl. end-to-end
+python3 -m http.server 8000 --directory website  # preview the public site
+```
+
+## Project phases
+
+| Phase | Scope |
+|---|---|
+| 1 | Detection modules for IAM, privilege escalation, audit logs, service accounts and SCC; unified SOC classifier; incident response; Streamlit dashboard |
+| 2 | Named GCP detection rules with MITRE ATT&CK, event-ID-aware deduplication, multi-event correlation |
+| 3 | Incident lifecycle with validated transitions, persistence across runs, analyst approval, simulation-only response actions |
+| 4 | Behaviour detection, MITRE enrichment and coverage matrix, risk prioritisation, alert tuning and detection quality, website integration, end-to-end testing |
+
+## Design principles
+
+- **Free:** no GCP billing, no paid resources.
+- **Honest labelling:** real GCP data and simulated scenarios are always distinguished.
+- **Investigation signals, not verdicts:** alerts and MITRE mappings show what a rule is designed to surface; they do not prove compromise.
+- **Simulation-only response:** nothing in the pipeline modifies GCP resources.
+- **Explainable decisions:** priority scores list their factors; suppressions carry a justification, an approver and an expiry date.
+- **Sanitised public data:** a leak check refuses to publish emails, project identifiers or resource names.
 
 ## Technology Stack
 
-- Google Cloud Platform
-- Google Cloud IAM
-- Google Cloud Audit Logs
-- Google Cloud Logging Python Client
-- Python 3.12
-- Streamlit
-- Plotly
-- Pandas
-- JSON
-- Python unittest
+- Google Cloud Platform: IAM, Cloud Audit Logs, Cloud Logging Python client
+- Google Apps Script (live sanitised feed, time-driven trigger)
+- Python 3.12, pytest / unittest
+- Streamlit, Plotly, Pandas (local dashboard)
+- HTML, CSS, JavaScript, Chart.js (public dashboard)
+- Cloudflare Pages (deploys `website/` from the `main` branch)
 - Git and GitHub
 
 ---
@@ -557,6 +587,8 @@ python3 -m pytest -q tests
 ---
 
 ## Project Validation
+
+`tests/test_end_to_end_pipeline.py` runs a simulated attack (service-account creation, key creation and IAM policy changes) plus authorised project setup through every stage in a temporary folder: correlation, behaviour detection, classification, MITRE enrichment, prioritisation, tuning, incident response and website publication. It checks every hand-off, including that simulated events are never published as REAL.
 
 The full automated test suite (`python -m pytest -v`) covers the detection modules, rule classification, deduplication, event correlation, behaviour-based detection its integration into the SOC pipeline, website data sanitisation, and incident response.
 

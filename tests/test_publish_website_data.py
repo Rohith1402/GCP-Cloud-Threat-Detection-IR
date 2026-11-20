@@ -184,6 +184,55 @@ class TestPublicReport(unittest.TestCase):
         self.assertEqual(len(evidence["events"]), 3)
         self.assertNotIn("principal_email", evidence["events"][0])
 
+    def test_event_labels_come_from_evidence(self):
+        alerts = [
+            {
+                "alert_id": "sim-1",
+                "source_module": "gcp_audit_logs",
+                "rule_id": "GENERAL-001",
+                "risk_score": 10,
+                "evidence": {"data_source": "SIMULATED"},
+            },
+            {
+                "alert_id": "real-1",
+                "source_module": "gcp_audit_logs",
+                "rule_id": "GENERAL-001",
+                "risk_score": 10,
+                "evidence": {"data_source": "REAL"},
+            },
+            {
+                "alert_id": "CORR-sim",
+                "source_module": "gcp_event_correlations",
+                "rule_id": "CORR-001",
+                "risk_score": 85,
+                "evidence": {"events": [{"event_id": "sim-1"}]},
+            },
+            {
+                "alert_id": "CORR-mixed",
+                "source_module": "gcp_event_correlations",
+                "rule_id": "CORR-003",
+                "risk_score": 75,
+                "evidence": {"events": [{"event_id": "sim-1"}, {"event_id": "real-1"}]},
+            },
+            {
+                "alert_id": "legacy",
+                "source_module": "gcp_audit_logs",
+                "rule_id": "GENERAL-001",
+                "risk_score": 10,
+            },
+        ]
+
+        labels = {
+            alert["alert_id"]: alert["data_label"]
+            for alert in build_public_report(alerts)["alerts"]
+        }
+
+        self.assertEqual(labels["sim-1"], "SIMULATED")
+        self.assertEqual(labels["real-1"], "REAL")
+        self.assertEqual(labels["CORR-sim"], "SIMULATED")
+        self.assertEqual(labels["CORR-mixed"], "MIXED")
+        self.assertEqual(labels["legacy"], "REAL")
+
     def test_plain_alerts_have_no_sequence_evidence(self):
         self.assertIsNone(self.alerts["audit-001"]["evidence"])
 

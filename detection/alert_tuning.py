@@ -6,7 +6,8 @@ applies them to prioritised SOC alerts.
 
 Each alert gets:
 - status: OPEN (active queue), SUPPRESSED (matched an approved tuning
-  rule) or ROLLED_UP (raw event already evidence in another alert)
+  rule) or ROLLED_UP (generic GENERAL-001 raw event already evidence in
+  a behaviour or correlation alert)
 - disposition: UNREVIEWED, BENIGN_TRUE_POSITIVE (rule correct, activity
   authorised) or FALSE_POSITIVE (rule logic wrong)
 
@@ -38,6 +39,9 @@ TUNING_FILE = BASE_DIR / "config" / "alert_tuning.json"
 DISPOSITIONS = {"BENIGN_TRUE_POSITIVE", "FALSE_POSITIVE"}
 ROLL_UP_SOURCES = {"gcp_behaviour_alerts", "gcp_event_correlations"}
 RAW_EVENT_SOURCE = "gcp_audit_logs"
+# Only generic raw events are rolled up. A raw event that matched its own
+# detection rule (for example GCP-IAM-001) always stays in the queue.
+GENERAL_RULE = "GENERAL-001"
 EXPIRY_WARNING_DAYS = 14
 
 REQUIRED_FIELDS = (
@@ -296,6 +300,7 @@ def apply_tuning(alerts, rules, today=None):
             }
         elif (
             alert.get("source_module") == RAW_EVENT_SOURCE
+            and alert.get("rule_id") == GENERAL_RULE
             and str(alert.get("alert_id")) in covered
         ):
             result["status"] = "ROLLED_UP"

@@ -192,18 +192,65 @@ def load_consolidated_alerts(input_file=INPUT_FILE):
     return [item for item in data if isinstance(item, dict)]
 
 
-def data_label(alert):
-    evidence = alert.get("evidence")
+def combine_labels(labels):
+    labels = {label for label in labels if label}
 
-    if alert.get("source_module") == "gcp_behaviour_alerts":
-        if isinstance(evidence, dict):
-            return str(evidence.get("data_source") or "UNKNOWN")
+    if not labels:
+        return None
+    if len(labels) == 1:
+        return labels.pop()
+    return "MIXED"
+
+
+def raw_event_labels(alerts):
+    """Map collected audit event IDs to their REAL/SIMULATED label."""
+
+    labels = {}
+
+    for alert in alerts:
+        evidence = alert.get("evidence")
+
+        if (
+            alert.get("source_module") == "gcp_audit_logs"
+            and isinstance(evidence, dict)
+            and evidence.get("data_source")
+        ):
+            labels[str(alert.get("alert_id"))] = str(evidence["data_source"])
+
+    return labels
+
+
+def data_label(alert, raw_labels=None):
+    """
+    Label an alert REAL, SIMULATED, SYNTHETIC or MIXED.
+
+    Event-based alerts are labelled from their own evidence, so a
+    simulated event is never published as REAL. Other modules use
+    SOURCE_DATA_LABELS.
+    """
+
+    evidence = alert.get("evidence")
+    evidence = evidence if isinstance(evidence, dict) else {}
+    module = alert.get("source_module")
+
+    if module in ("gcp_behaviour_alerts", "gcp_audit_logs"):
+        if evidence.get("data_source"):
+            return str(evidence["data_source"])
+
+    if module == "gcp_event_correlations":
+        events = evidence.get("events")
+        label = combine_labels(
+            (raw_labels or {}).get(str(event.get("event_id")))
+            for event in (events if isinstance(events, list) else [])
+            if isinstance(event, dict)
+        )
+        if label:
+            return label
+
+    if module == "gcp_behaviour_alerts":
         return "UNKNOWN"
 
-    return SOURCE_DATA_LABELS.get(
-        alert.get("source_module"),
-        "UNKNOWN",
-    )
+    return SOURCE_DATA_LABELS.get(module, "UNKNOWN")
 
 
 def evidence_summary(alert):
@@ -274,7 +321,7 @@ def public_tuning(tuning):
     }
 
 
-def to_public_alert(alert):
+def to_public_alert(alert, raw_labels=None):
     return {
         "alert_id": alert.get("alert_id"),
         "rule_id": alert.get("rule_id"),
@@ -294,7 +341,7 @@ def to_public_alert(alert):
         ],
         "confidence": alert.get("confidence"),
         "source_module": alert.get("source_module"),
-        "data_label": data_label(alert),
+        "data_label": data_label(alert, raw_labels),
         "principal": public_principal(alert.get("principal_or_resource")),
         "description": alert.get("description"),
         "mitre_technique_id": alert.get("mitre_technique_id"),
@@ -328,8 +375,10 @@ def behaviour_rule_catalogue():
 
 
 def build_public_report(alerts, generated_at=None, tuning_rules=None):
+    raw_labels = raw_event_labels(alerts)
+
     public_alerts = sorted(
-        (to_public_alert(alert) for alert in alerts),
+        (to_public_alert(alert, raw_labels) for alert in alerts),
         key=lambda item: (
             item["priority_score"] or 0,
             item["risk_score"] or 0,

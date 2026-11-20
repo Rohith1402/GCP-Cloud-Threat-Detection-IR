@@ -219,6 +219,16 @@ class TestApplyTuning(unittest.TestCase):
     def test_input_alerts_are_not_modified(self):
         self.assertNotIn("status", self.alerts[1])
 
+    def test_raw_events_with_their_own_rule_are_never_rolled_up(self):
+        detected = dict(raw_event("evt-1"), rule_id="GCP-IAM-001", severity="HIGH")
+        results = {
+            alert["alert_id"]: alert
+            for alert in apply_tuning([detected, behaviour_alert()], [], TODAY)
+        }
+
+        self.assertEqual(results["evt-1"]["status"], "OPEN")
+        self.assertIsNone(results["evt-1"]["covered_by"])
+
     def test_roll_up_applies_without_tuning_rules(self):
         results = {
             alert["alert_id"]: alert
