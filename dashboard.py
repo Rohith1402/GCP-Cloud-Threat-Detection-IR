@@ -1,11 +1,22 @@
 
 import json
 import re
+import sys
 from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+
+# Make the detection package importable however the app is launched.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+try:
+    from detection.behaviour_anomaly_detector import (
+        RULES as BEHAVIOUR_RULES,
+    )
+except ImportError:
+    BEHAVIOUR_RULES = {}
 
 # ==================================================
 # 1. CONFIGURATION
@@ -516,6 +527,205 @@ if not alerts_df.empty:
 
 else:
     st.info("No SOC alerts available.")
+
+st.divider()
+
+# ==================================================
+# 13A. BEHAVIOUR-BASED DETECTIONS
+# ==================================================
+
+st.subheader("🧠 Behaviour-Based Detections")
+
+st.caption(
+    "Pattern rules over GCP audit events: who acted, how often "
+    "and how quickly. Alerts are investigation signals, not "
+    "proof of compromise."
+)
+
+
+def get_evidence(value):
+    """Return an alert's evidence as a dictionary."""
+
+    return value if isinstance(value, dict) else {}
+
+
+if not alerts_df.empty:
+    behaviour_df = alerts_df[
+        alerts_df["source_module"] == "gcp_behaviour_alerts"
+    ].copy()
+else:
+    behaviour_df = pd.DataFrame()
+
+if not behaviour_df.empty:
+
+    if "evidence" not in behaviour_df.columns:
+        behaviour_df["evidence"] = None
+
+    behaviour_df["evidence"] = behaviour_df["evidence"].apply(
+        get_evidence
+    )
+
+    behaviour_df["data_source"] = behaviour_df["evidence"].apply(
+        lambda evidence: evidence.get("data_source", "UNKNOWN")
+    )
+
+    behaviour_df["events"] = behaviour_df["evidence"].apply(
+        lambda evidence: evidence.get("event_count", 0)
+    )
+
+    behaviour_df["first_seen"] = behaviour_df["evidence"].apply(
+        lambda evidence: evidence.get("first_seen")
+    )
+
+    behaviour_df["last_seen"] = behaviour_df["evidence"].apply(
+        lambda evidence: evidence.get("last_seen")
+    )
+
+behaviour_total = len(behaviour_df)
+
+rules_triggered = (
+    behaviour_df["rule_id"].nunique()
+    if not behaviour_df.empty and "rule_id" in behaviour_df.columns
+    else 0
+)
+
+real_behaviour_alerts = (
+    int(behaviour_df["data_source"].eq("REAL").sum())
+    if not behaviour_df.empty
+    else 0
+)
+
+b_col1, b_col2, b_col3 = st.columns(3)
+
+b_col1.metric("Behaviour Alerts", behaviour_total)
+b_col2.metric(
+    "Rules Triggered",
+    f"{rules_triggered} of {len(BEHAVIOUR_RULES) or 3}",
+)
+b_col3.metric("From Real GCP Events", real_behaviour_alerts)
+
+# Rule catalogue: what each behaviour rule looks for.
+
+if BEHAVIOUR_RULES:
+
+    st.write("**Detection Rules**")
+
+    alerts_per_rule = (
+        behaviour_df["rule_id"].value_counts()
+        if not behaviour_df.empty and "rule_id" in behaviour_df.columns
+        else pd.Series(dtype=int)
+    )
+
+    catalogue_df = pd.DataFrame([
+        {
+            "Rule": rule_id,
+            "Name": rule["name"],
+            "Looks For": rule["description"],
+            "Window (min)": rule["window_minutes"],
+            "Min. Events": rule["threshold"],
+            "Risk Score": rule["risk_score"],
+            "Confidence": rule["confidence"],
+            "MITRE ATT&CK": (
+                f"{rule['mitre_technique']} - {rule['mitre_name']}"
+                if rule.get("mitre_technique")
+                else "-"
+            ),
+            "Alerts": int(alerts_per_rule.get(rule_id, 0)),
+        }
+        for rule_id, rule in BEHAVIOUR_RULES.items()
+    ])
+
+    st.dataframe(
+        catalogue_df,
+        width="stretch",
+        hide_index=True,
+    )
+
+# Triggered behaviour alerts and their contributing events.
+
+if not behaviour_df.empty:
+
+    st.write("**Triggered Behaviour Alerts**")
+
+    behaviour_columns = [
+        column
+        for column in [
+            "alert_id",
+            "rule_id",
+            "rule_name",
+            "severity",
+            "risk_score",
+            "confidence",
+            "principal_or_resource",
+            "events",
+            "first_seen",
+            "last_seen",
+            "data_source",
+            "mitre_technique_id",
+        ]
+        if column in behaviour_df.columns
+    ]
+
+    behaviour_display_df = (
+        behaviour_df[behaviour_columns]
+        .copy()
+        .sort_values("risk_score", ascending=False)
+    )
+
+    if "principal_or_resource" in behaviour_display_df.columns:
+        behaviour_display_df["principal_or_resource"] = (
+            behaviour_display_df["principal_or_resource"]
+            .apply(mask_email)
+        )
+
+    st.dataframe(
+        behaviour_display_df,
+        width="stretch",
+        hide_index=True,
+    )
+
+    for _, alert in behaviour_df.sort_values(
+        "risk_score", ascending=False
+    ).iterrows():
+
+        evidence = alert["evidence"]
+        events = evidence.get("events", [])
+
+        label = (
+            f"{alert.get('rule_id', '')} | "
+            f"{alert.get('rule_name', '')} | "
+            f"{evidence.get('event_count', len(events))} events | "
+            f"{evidence.get('data_source', 'UNKNOWN')} data"
+        )
+
+        with st.expander(label):
+
+            st.write(
+                f"**Recommendation:** "
+                f"{alert.get('recommendation', '-')}"
+            )
+
+            if isinstance(events, list) and events:
+                st.dataframe(
+                    pd.DataFrame(events).map(
+                        lambda value: (
+                            mask_email(value)
+                            if value is not None
+                            else value
+                        )
+                    ),
+                    width="stretch",
+                    hide_index=True,
+                )
+            else:
+                st.info("No contributing events recorded.")
+
+else:
+    st.info(
+        "No behaviour-based alerts in the current report. Run "
+        "detection/behaviour_alert_integration.py and then "
+        "detection/alert_classifier.py to refresh."
+    )
 
 st.divider()
 

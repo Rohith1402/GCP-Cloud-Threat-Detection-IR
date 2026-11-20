@@ -31,6 +31,12 @@ The project contains eight security modules:
 7. Incident Response Automation
 8. SOC Security Dashboard and Reporting
 
+Later phases extend the pipeline:
+
+- **Phase 2:** rule-based GCP detections with MITRE ATT&CK mapping (`GCP-IAM-*`, `GCP-SA-*`, `GCP-SCC-*`) and multi-event correlation (`CORR-001` to `CORR-003`).
+- **Phase 3:** incident response lifecycle with persistence and simulation-only response actions.
+- **Phase 4:** behaviour-based anomaly detection (`BEHAV-001` to `BEHAV-003`) and publication of sanitised results to the public Cyber SOC website.
+
 The project combines synthetic security training datasets with an on-demand integration that retrieves real GCP Admin Activity audit events.
 
 ## Technology Stack
@@ -326,6 +332,7 @@ An interactive SOC dashboard built using Streamlit, Plotly and Pandas.
 - Live GCP Cloud Audit Events section in the local environment.
 - Masking of displayed email addresses.
 - Local security report and public demo data separation.
+- Behaviour-Based Detections section: rule catalogue, triggered behaviour alerts, real/simulated data labels and the contributing audit events for each alert.
 
 ### Run the dashboard
 
@@ -359,19 +366,127 @@ The public Streamlit deployment uses sanitized fictional demo data. It does not 
 
 ---
 
+## Phase 2: GCP Threat Detection Engine
+
+Phase 2 moves beyond single-event alerts with named detection rules and multi-event correlation.
+
+### Rule-based detections
+
+The SOC classifier maps alerts to named detection rules with a risk score, confidence level, analyst recommendation and, where applicable, a MITRE ATT&CK technique.
+
+| Rule | Detection | Risk | MITRE ATT&CK |
+|---|---|---:|---|
+| GCP-IAM-001 | IAM policy modification | 80 | - |
+| GCP-IAM-002 | Service-account key creation | 90 | T1098.001 |
+| GCP-IAM-003 | Service-account key deletion | 70 | - |
+| GCP-IAM-004 | Service-account creation | 40 | - |
+| GCP-IAM-005 | Privileged IAM role assignment | 50 | T1098.003 |
+| GCP-IAM-006 | Sensitive IAM permission combination | 100 | - |
+| GCP-SA-001 | Repeated service-account authentication failures | 60 | - |
+| GCP-SCC-001 | Public storage bucket access | 100 | - |
+| GCP-SCC-002 | Excessive IAM permissions | 90 | - |
+| GCP-SCC-003 | Critical compute vulnerability | 85 | - |
+| GCP-SCC-004 | Suspicious network activity | 55 | - |
+
+### Event correlation
+
+`detection/event_correlation.py` links related audit events by the same principal:
+
+| Rule | Correlation | Risk |
+|---|---|---:|
+| CORR-001 | Service-account creation followed by key creation (60 min) | 85 |
+| CORR-002 | Service-account key creation followed by IAM policy modification (60 min) | 95 |
+| CORR-003 | Repeated sensitive administrative activity (3+ in 15 min) | 75 |
+
+```bash
+python3 detection/event_correlation.py
+```
+
+Output: `reports/gcp_event_correlations.json`
+
+---
+
+## Phase 4: Behaviour-Based Anomaly Detection
+
+Phase 4 looks at who acted, how often and how quickly.
+
+### Behaviour rules
+
+`detection/behaviour_anomaly_detector.py` detects activity patterns per principal using time windows and thresholds:
+
+| Rule | Behaviour | Window | Min. events | Risk | Confidence | MITRE ATT&CK |
+|---|---|---:|---:|---:|---|---|
+| BEHAV-001 | Administrative activity spike (sensitive IAM operations) | 10 min | 5 | 70 | MEDIUM | T1098 Account Manipulation |
+| BEHAV-002 | Repeated service enablement | 15 min | 3 | 55 | LOW | - |
+| BEHAV-003 | Service-account creation followed by key creation | 60 min | 2 | 65 | MEDIUM | T1098.001 Additional Cloud Credentials |
+
+Design choices:
+
+- Only explicitly selected sensitive IAM methods count towards BEHAV-001, so normal project setup (CreateProject, EnableService, GetOperation) does not trigger it.
+- Events with missing or invalid timestamps are ignored, and duplicate event IDs are not double-counted.
+- Every alert is labelled `REAL`, `SIMULATED` or `MIXED` according to the source of its evidence, so test data is never mistaken for live activity.
+- All contributing events are preserved as evidence for the analyst.
+
+`detection/behaviour_alert_integration.py` runs all three rules against the collected audit events and writes a behaviour report. The SOC classifier then merges these alerts into the consolidated feed, where they are deduplicated and prioritised alongside every other alert.
+
+```bash
+python3 detection/behaviour_alert_integration.py
+```
+
+Output: `reports/gcp_behaviour_alerts.json`
+
+### Live result
+
+Run against the project's real GCP Admin Activity events, BEHAV-002 fired once: four service enablements within two seconds during initial project setup. It was classified as MEDIUM severity with LOW confidence and labelled `REAL`. This is expected legitimate activity, and the rule's LOW confidence reflects that service enablement often has a valid business reason.
+
+### Public website publication
+
+The public Cyber SOC website (https://cyber-soc.pages.dev/) shows the pipeline's results. `detection/publish_website_data.py` converts the consolidated report into `website/data/soc_alerts.json`:
+
+- Real email addresses become aliases (`user-01`, `service-account-01`).
+- Resource names are replaced by their type (for example "Storage bucket"); project IDs and numbers are removed.
+- Every alert is labelled `REAL` or `SYNTHETIC`.
+- A final leak check refuses to write the file if any email address, project identifier or resource name remains.
+
+```bash
+python3 detection/publish_website_data.py
+```
+
+The website is deployed with Cloudflare Pages from the `website/` folder of the `main` branch. A separate Google Apps Script collector provides a sanitised live feed of Admin Activity events (timestamp, method, service, severity and status only).
+
+### Full pipeline order
+
+```bash
+python detection/gcp_audit_log_collector.py
+python3 detection/event_correlation.py
+python3 detection/behaviour_alert_integration.py
+python3 detection/alert_classifier.py
+python3 detection/incident_response.py
+python3 detection/publish_website_data.py
+python3 -m streamlit run dashboard.py
+```
+
+### Run all tests
+
+```bash
+python3 -m pytest -q tests
+```
+
+---
+
 ## Project Validation
 
-The original project test suite reported 43 passing automated tests during development.
+The full automated test suite (`python -m pytest -v`) covers the detection modules, rule classification, deduplication, event correlation, behaviour-based detection its integration into the SOC pipeline, website data sanitisation, and incident response.
 
-The latest live integration was manually verified:
+The live integration was also manually verified:
 
 - GCP Cloud Logging Python client installed.
 - Python 3.12 environment verified.
 - Seven real GCP Admin Activity events collected.
-- Unified SOC classifier successfully processed 20 alerts.
+- Unified SOC classifier successfully processed 21 alerts, including one behaviour-based alert.
 - Live GCP events included in the consolidated report.
 - Local Streamlit dashboard displayed the seven GCP events.
 - Email masking verified.
 - Public Streamlit deployment verified using demo data.
 
-These are integration checks; the original 43-test result should not be interpreted as a newly executed test run after every
+Real audit events are not automatically evidence of malicious activity. All detections are investigation signals that require analyst review, and incident response remains simulation-only.

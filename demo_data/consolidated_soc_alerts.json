@@ -1,4 +1,3 @@
-
 [
   {
     "alert_id": "DEMO-IAM-001",
@@ -59,5 +58,99 @@
     "severity": "LOW",
     "description": "Low-risk IAM permission change requiring review",
     "status": "OPEN"
+  },
+  {
+    "alert_id": "BEHAV-001-demo-iam-001",
+    "source_module": "gcp_behaviour_alerts",
+    "principal_or_resource": "demo-admin@example.com",
+    "category": "BEHAV-001",
+    "risk_score": 70,
+    "severity": "HIGH",
+    "description": "Multiple security-sensitive IAM operations by one principal within a short time window.",
+    "timestamp": "2026-11-18T09:00:00+00:00",
+    "status": "OPEN",
+    "rule_id": "BEHAV-001",
+    "rule_name": "Administrative Activity Spike",
+    "confidence": "MEDIUM",
+    "mitre_technique_id": "T1098",
+    "mitre_technique_name": "Account Manipulation",
+    "evidence": {
+      "event_count": 5,
+      "first_seen": "2026-11-18T09:00:00+00:00",
+      "last_seen": "2026-11-18T09:06:00+00:00",
+      "data_source": "SIMULATED",
+      "events": [
+        {
+          "event_id": "demo-iam-001",
+          "timestamp": "2026-11-18T09:00:00+00:00",
+          "method_name": "SetIamPolicy",
+          "service_name": "iam.googleapis.com"
+        },
+        {
+          "event_id": "demo-iam-002",
+          "timestamp": "2026-11-18T09:01:30+00:00",
+          "method_name": "SetIamPolicy",
+          "service_name": "iam.googleapis.com"
+        },
+        {
+          "event_id": "demo-iam-003",
+          "timestamp": "2026-11-18T09:03:00+00:00",
+          "method_name": "google.iam.admin.v1.CreateServiceAccount",
+          "service_name": "iam.googleapis.com"
+        },
+        {
+          "event_id": "demo-iam-004",
+          "timestamp": "2026-11-18T09:04:30+00:00",
+          "method_name": "google.iam.admin.v1.CreateServiceAccountKey",
+          "service_name": "iam.googleapis.com"
+        },
+        {
+          "event_id": "demo-iam-005",
+          "timestamp": "2026-11-18T09:06:00+00:00",
+          "method_name": "SetIamPolicy",
+          "service_name": "iam.googleapis.com"
+        }
+      ]
+    },
+    "recommendation": "Review the principal's activity and validate its business justification. Investigate related audit events before taking response action.",
+    "detection_status": "REQUIRES_INVESTIGATION"
+  },
+  {
+    "alert_id": "BEHAV-003-demo-sa-001",
+    "source_module": "gcp_behaviour_alerts",
+    "principal_or_resource": "demo-developer@example.com",
+    "category": "BEHAV-003",
+    "risk_score": 65,
+    "severity": "MEDIUM",
+    "description": "Service account creation followed by key creation by the same principal within a short time window.",
+    "timestamp": "2026-11-18T14:10:00+00:00",
+    "status": "OPEN",
+    "rule_id": "BEHAV-003",
+    "rule_name": "Unusual Service Account Administration",
+    "confidence": "MEDIUM",
+    "mitre_technique_id": "T1098.001",
+    "mitre_technique_name": "Additional Cloud Credentials",
+    "evidence": {
+      "event_count": 2,
+      "first_seen": "2026-11-18T14:10:00+00:00",
+      "last_seen": "2026-11-18T14:22:00+00:00",
+      "data_source": "SIMULATED",
+      "events": [
+        {
+          "event_id": "demo-sa-001",
+          "timestamp": "2026-11-18T14:10:00+00:00",
+          "method_name": "google.iam.admin.v1.CreateServiceAccount",
+          "service_name": "iam.googleapis.com"
+        },
+        {
+          "event_id": "demo-sa-002",
+          "timestamp": "2026-11-18T14:22:00+00:00",
+          "method_name": "google.iam.admin.v1.CreateServiceAccountKey",
+          "service_name": "iam.googleapis.com"
+        }
+      ]
+    },
+    "recommendation": "Review the principal's activity and validate its business justification. Investigate related audit events before taking response action.",
+    "detection_status": "REQUIRES_INVESTIGATION"
   }
 ]
