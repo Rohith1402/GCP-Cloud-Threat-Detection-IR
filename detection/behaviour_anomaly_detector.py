@@ -52,6 +52,40 @@ RULES = {
         "mitre_technique": "T1098.001",
         "mitre_name": "Additional Cloud Credentials",
     },
+    "BEHAV-004": {
+        "name": "Cloud Account Enumeration",
+        "description": (
+            "Burst of service-account and key enumeration by one "
+            "principal using several different discovery methods. "
+            "Common in administration; requires contextual review."
+        ),
+        "risk_score": 50,
+        "confidence": "LOW",
+        "window_minutes": 10,
+        "threshold": 6,
+        "min_distinct_methods": 3,
+        "mitre_technique": "T1087.004",
+        "mitre_name": "Account Discovery: Cloud Account",
+    },
+    "BEHAV-005": {
+        "name": "IAM Permission Discovery",
+        "description": (
+            "Burst of IAM policy, permission and role queries by one "
+            "principal using more than one discovery method. "
+            "Common in administration; requires contextual review."
+        ),
+        "risk_score": 50,
+        "confidence": "LOW",
+        "window_minutes": 10,
+        "threshold": 6,
+        # Tuned on real data: in Admin Read audit logs only GetIamPolicy
+        # and QueryGrantableRoles are recorded for permission discovery
+        # (GetRole, ListRoles and testIamPermissions were not logged), so
+        # requiring three different methods could never fire.
+        "min_distinct_methods": 2,
+        "mitre_technique": "T1069.003",
+        "mitre_name": "Permission Groups Discovery: Cloud Groups",
+    },
 }
 
 
@@ -63,6 +97,31 @@ SENSITIVE_IAM_METHODS = (
     "deleteserviceaccountkey",
     "setserviceaccount",
 )
+
+
+# Discovery methods seen in Data Access (ADMIN_READ) audit logs.
+ACCOUNT_DISCOVERY_METHODS = (
+    "listserviceaccounts",
+    "getserviceaccount",
+    "listserviceaccountkeys",
+    "getserviceaccountkey",
+)
+
+PERMISSION_DISCOVERY_METHODS = (
+    "getiampolicy",
+    "testiampermissions",
+    "querygrantableroles",
+    "querytestablepermissions",
+    "queryauditableservices",
+    "listroles",
+    "getrole",
+)
+
+
+def method_key(event):
+    """Short, lower-case method name (last dotted segment)."""
+
+    return str(event.get("method_name") or "").split(".")[-1].lower()
 
 
 def parse_timestamp(value):
@@ -238,6 +297,91 @@ def find_activity_windows(
             start_index = index + len(window_events)
 
     return results
+
+
+def find_breadth_windows(
+    events,
+    window_minutes,
+    predicate,
+    min_events,
+    min_distinct_methods,
+):
+    """
+    Find non-overlapping windows with at least min_events matching
+    events that use at least min_distinct_methods different methods.
+    Breadth separates systematic enumeration from repeated page loads.
+    """
+
+    results = []
+    window = timedelta(minutes=window_minutes)
+    matching = [event for event in events if predicate(event)]
+    start_index = 0
+
+    for index, first_event in enumerate(matching):
+        if index < start_index:
+            continue
+
+        end_time = first_event["_parsed_timestamp"] + window
+
+        window_events = [
+            event for event in matching[index:]
+            if event["_parsed_timestamp"] <= end_time
+        ]
+
+        distinct = {method_key(event) for event in window_events}
+
+        if (
+            len(window_events) >= min_events
+            and len(distinct) >= min_distinct_methods
+        ):
+            results.append(window_events)
+            start_index = index + len(window_events)
+
+    return results
+
+
+def _detect_discovery(events, rule_id, methods):
+    rule = RULES[rule_id]
+    prepared = prepare_events(events)
+    results = []
+
+    def predicate(event):
+        return method_key(event) in methods
+
+    for principal, principal_events in group_by_principal(prepared).items():
+        for window_events in find_breadth_windows(
+            principal_events,
+            window_minutes=rule["window_minutes"],
+            predicate=predicate,
+            min_events=rule["threshold"],
+            min_distinct_methods=rule["min_distinct_methods"],
+        ):
+            results.append(build_result(rule_id, window_events, principal))
+
+    return results
+
+
+def detect_cloud_account_enumeration(events):
+    """
+    BEHAV-004:
+    At least six service-account / key discovery calls using at least
+    three different methods by one principal within ten minutes.
+    Validated on simulated scenarios only (the lab project has no
+    service accounts to enumerate).
+    """
+
+    return _detect_discovery(events, "BEHAV-004", ACCOUNT_DISCOVERY_METHODS)
+
+
+def detect_iam_permission_discovery(events):
+    """
+    BEHAV-005:
+    At least six IAM policy / permission / role discovery calls using at
+    least two different methods by one principal within ten minutes.
+    Validated on real Data Access logs (21 Nov 2026).
+    """
+
+    return _detect_discovery(events, "BEHAV-005", PERMISSION_DISCOVERY_METHODS)
 
 
 def is_sensitive_iam_operation(event):

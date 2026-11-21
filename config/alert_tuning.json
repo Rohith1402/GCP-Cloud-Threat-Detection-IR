@@ -13,7 +13,44 @@
         "principal_sha256": "6efaaf12d9b72a85299843be8c1bb1617e2140a56af9d084687d321904425259",
         "first_seen_after": "2026-11-15T14:00:00Z",
         "first_seen_before": "2026-11-15T15:00:00Z",
-        "methods": ["EnableService"]
+        "methods": [
+          "EnableService"
+        ]
+      }
+    },
+    {
+      "id": "TUNE-002",
+      "rule_id": "GCP-IAM-001",
+      "disposition": "BENIGN_TRUE_POSITIVE",
+      "justification": "IAM policy change on 21 Nov 2026 by the project owner to enable Admin Read Data Access audit logs for the IAM and Cloud Resource Manager APIs. Only auditConfigs were added; a pre-change check confirmed role bindings were unchanged.",
+      "approved_by": "Project owner (SOC lab analyst)",
+      "approved_on": "2026-11-21",
+      "expires_on": "2027-02-21",
+      "match": {
+        "principal_sha256": "6efaaf12d9b72a85299843be8c1bb1617e2140a56af9d084687d321904425259",
+        "first_seen_after": "2026-11-21T05:45:00Z",
+        "first_seen_before": "2026-11-21T05:55:00Z",
+        "methods": [
+          "SetIamPolicy"
+        ]
+      }
+    },
+    {
+      "id": "TUNE-003",
+      "rule_id": "BEHAV-005",
+      "disposition": "BENIGN_TRUE_POSITIVE",
+      "justification": "Authorised detection validation test on 21 Nov 2026: the project owner ran a scripted IAM permission discovery sequence to validate BEHAV-005 on real Data Access logs. The rule fired as intended.",
+      "approved_by": "Project owner (SOC lab analyst)",
+      "approved_on": "2026-11-21",
+      "expires_on": "2027-02-21",
+      "match": {
+        "principal_sha256": "6efaaf12d9b72a85299843be8c1bb1617e2140a56af9d084687d321904425259",
+        "first_seen_after": "2026-11-21T06:30:00Z",
+        "first_seen_before": "2026-11-21T06:40:00Z",
+        "methods": [
+          "GetIamPolicy",
+          "QueryGrantableRoles"
+        ]
       }
     }
   ]

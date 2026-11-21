@@ -8,8 +8,8 @@ A free, end-to-end Google Cloud threat detection and SOC project built in Python
 
 ## At a glance
 
-- **17 detection rules:** 11 rule-based GCP detections, 3 multi-event correlations, 3 behaviour rules, plus generic triage of all other audit events.
-- **MITRE ATT&CK:** 14 of 18 rules mapped to 9 techniques across 7 of 14 Enterprise tactics. Unmapped rules and uncovered tactics are listed openly.
+- **19 detection rules:** 11 rule-based GCP detections, 3 multi-event correlations, 5 behaviour rules (including 2 Discovery rules on real Data Access logs), plus generic triage of all other audit events.
+- **MITRE ATT&CK:** 16 of 20 rules mapped to 11 techniques across 8 of 14 Enterprise tactics. Unmapped rules and uncovered tactics are listed openly.
 - **Prioritisation:** P1–P4 priority with a per-alert explanation of every score adjustment.
 - **Tuning:** analyst dispositions, expiring suppressions with justification, roll-up of duplicate evidence, and a per-rule noise report.
 - **Incident response:** lifecycle with persistence, analyst approval, simulation-only actions.
@@ -35,11 +35,11 @@ All screenshots show real pipeline output from the public site: identities are m
 
 ```mermaid
 flowchart LR
-    GCP["GCP Admin Activity<br/>audit logs"] --> COL["gcp_audit_log_collector.py"]
+    GCP["GCP Admin Activity +<br/>Data Access (Admin Read)<br/>audit logs"] --> COL["gcp_audit_log_collector.py"]
     TRAIN["IAM policy export +<br/>synthetic training data"] --> MOD["Detection modules 1–5<br/>IAM, privilege, audit, SA, SCC"]
 
     COL --> CORR["event_correlation.py<br/>CORR-001…003"]
-    COL --> BEH["behaviour_alert_integration.py<br/>BEHAV-001…003"]
+    COL --> BEH["behaviour_alert_integration.py<br/>BEHAV-001…005"]
     COL --> CLS
     MOD --> CLS
     CORR --> CLS
@@ -82,6 +82,7 @@ python3 -m http.server 8000 --directory website  # preview the public site
 | 3 | Incident lifecycle with validated transitions, persistence across runs, analyst approval, simulation-only response actions |
 | 4 | Behaviour detection, MITRE enrichment and coverage matrix, risk prioritisation, alert tuning and detection quality, website integration, end-to-end testing |
 | 5 | AI-assisted triage with a local LLM: advisory, sanitised, injection-resistant, validated |
+| 5.1 | Discovery detection on real Data Access logs (BEHAV-004, BEHAV-005), MITRE coverage 7 → 8 tactics |
 
 ## Design principles
 
@@ -468,8 +469,12 @@ Phase 4 looks at who acted, how often and how quickly.
 | BEHAV-001 | Administrative activity spike (sensitive IAM operations) | 10 min | 5 | 70 | MEDIUM | T1098 Account Manipulation |
 | BEHAV-002 | Repeated service enablement | 15 min | 3 | 55 | LOW | - |
 | BEHAV-003 | Service-account creation followed by key creation | 60 min | 2 | 65 | MEDIUM | T1098.001 Additional Cloud Credentials |
+| BEHAV-004 | Cloud account enumeration: service-account and key discovery calls using ≥ 3 different methods | 10 min | 6 | 50 | LOW | T1087.004 Account Discovery: Cloud Account |
+| BEHAV-005 | IAM permission discovery: policy, permission and role queries using ≥ 2 different methods | 10 min | 6 | 50 | LOW | T1069.003 Permission Groups Discovery: Cloud Groups |
 
 Design choices:
+
+- BEHAV-004 and BEHAV-005 run on **Data Access (Admin Read)** audit logs, collected into a separate file so routine reads never become individual alerts. They require **breadth** (several different discovery methods) as well as volume, so repeatedly reading one policy or listing one resource type does not fire, while systematic enumeration does.
 
 - Only explicitly selected sensitive IAM methods count towards BEHAV-001, so normal project setup (CreateProject, EnableService, GetOperation) does not trigger it.
 - Events with missing or invalid timestamps are ignored, and duplicate event IDs are not double-counted.
@@ -492,7 +497,7 @@ Run against the project's real GCP Admin Activity events, BEHAV-002 fired once: 
 
 `detection/mitre_mapping.py` is the single source of truth for ATT&CK mappings. Every SOC alert (rule-based, correlation and behaviour) carries `mitre_technique_id`, `mitre_technique_name` and `mitre_tactics`.
 
-Coverage: **7 of 14 Enterprise tactics**, **14 of 18 rules** mapped, **9 unique techniques**.
+Coverage: **8 of 14 Enterprise tactics**, **16 of 20 rules** mapped, **11 unique techniques**.
 
 | Tactic | Techniques | Rules |
 |---|---|---|
@@ -504,7 +509,7 @@ Coverage: **7 of 14 Enterprise tactics**, **14 of 18 rules** mapped, **9 unique 
 | TA0004 Privilege Escalation | T1098 Account Manipulation<br>T1098.001 Additional Cloud Credentials<br>T1098.003 Additional Cloud Roles<br>T1548.005 Temporary Elevated Cloud Access | BEHAV-001, CORR-003, BEHAV-003, CORR-001, GCP-IAM-002, CORR-002, GCP-IAM-001, GCP-IAM-005, GCP-IAM-006 |
 | TA0005 Defense Evasion | T1548.005 Temporary Elevated Cloud Access | GCP-IAM-006 |
 | TA0006 Credential Access | T1110 Brute Force | GCP-SA-001 |
-| TA0007 Discovery | No coverage | - |
+| TA0007 Discovery | T1069.003 Permission Groups Discovery: Cloud Groups<br>T1087.004 Account Discovery: Cloud Account | BEHAV-005, BEHAV-004 |
 | TA0008 Lateral Movement | No coverage | - |
 | TA0009 Collection | T1530 Data from Cloud Storage | GCP-SCC-001 |
 | TA0011 Command and Control | No coverage | - |
@@ -569,6 +574,29 @@ Example from the live data:
 | 4 × GENERAL-001 EnableService events | `ROLLED_UP` | Already evidence in the BEHAV-002 alert |
 
 Result: 21 alerts, 16 active, 1 suppressed, 4 rolled up. The consolidated report adds `active_alert_count`, `status_summary` and a `detection_quality` report: per rule, how many alerts fired, how many stayed active, were suppressed or were rolled up, and the noise rate. The website shows the same in its "Tuned Alerts & Detection Quality" section.
+
+### Discovery detection on real Data Access logs
+
+Admin Activity logs only record changes. Reconnaissance (listing accounts, reading IAM policies) appears only in **Data Access** audit logs, which are off by default. This project enables only the **Admin Read** log type for the **IAM** and **Cloud Resource Manager** APIs, which keeps log volume tiny and within Cloud Logging's free ingestion allotment. It was verified to work on the project with billing disabled.
+
+The collector writes these events to `reports/gcp_data_access_logs.json` (private) with a coarse `client_type` (gcloud, console, client library); the raw user agent is not stored. The project ID is read from `GCP_PROJECT_ID` or the active gcloud configuration, never from code.
+
+### Real-data validation of the Discovery rules
+
+The discovery rules were tested against real activity in the lab project on 21 Nov 2026, not only against simulated scenarios:
+
+| Test | What was logged (Admin Read) | Result |
+|---|---|---|
+| `gcloud` enumeration: `get-iam-policy`, `list-grantable-roles`, `roles describe` × 2 | GetIamPolicy × 2, QueryGrantableRoles × 4. `roles describe` (GetRole) **not logged** | 6 calls, 2 methods |
+| Same, plus `testIamPermissions` via the REST API | testIamPermissions **not logged** | 12 calls, 2 methods |
+| Console browsing of IAM pages | Not yet tested | Planned: confirm normal console use does not fire |
+
+Findings and tuning decisions:
+
+- In this setup, only `GetIamPolicy`, `QueryGrantableRoles` and `ListServiceAccounts` appear in Admin Read logs; `GetRole`, `ListRoles` and `testIamPermissions` leave no trace. Attacker tooling that relies on `testIamPermissions` is therefore invisible to log-based detection here. This is a documented **telemetry gap**, not a rule bug.
+- BEHAV-005 originally required three different methods, so it could never fire on real data. It was tuned to **≥ 2 methods and ≥ 6 calls in 10 minutes**, which detects the real test above while repeated single-method reads still do not fire.
+- BEHAV-004 keeps **≥ 3 methods** and is validated on simulated scenarios only, because the lab project has no service accounts to enumerate.
+- A regression test replays the exact real-world method pattern, so future changes cannot silently break the tuned rule.
 
 ### Public website publication
 

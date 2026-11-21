@@ -77,6 +77,21 @@ def scenario_events():
     return attack + setup + background
 
 
+def discovery_events():
+    methods = [
+        "google.iam.admin.v1.ListServiceAccounts",
+        "google.iam.admin.v1.GetServiceAccount",
+        "google.iam.admin.v1.ListServiceAccountKeys",
+        "google.iam.admin.v1.GetServiceAccount",
+        "google.iam.admin.v1.ListServiceAccountKeys",
+        "google.iam.admin.v1.GetServiceAccountKey",
+    ]
+    return [
+        event(f"disc-{i}", -5 + i * 0.5, method, ATTACKER)
+        for i, method in enumerate(methods)
+    ]
+
+
 def tuning_rules():
     return {
         "rules": [{
@@ -103,6 +118,7 @@ class TestEndToEndPipeline(unittest.TestCase):
         root = Path(cls.directory.name)
 
         audit_file = root / "gcp_audit_logs.json"
+        data_access_file = root / "gcp_data_access_logs.json"
         correlation_file = root / "gcp_event_correlations.json"
         behaviour_file = root / "gcp_behaviour_alerts.json"
         tuning_file = root / "alert_tuning.json"
@@ -110,6 +126,7 @@ class TestEndToEndPipeline(unittest.TestCase):
         website_file = root / "website" / "data" / "soc_alerts.json"
 
         audit_file.write_text(json.dumps(scenario_events()), encoding="utf-8")
+        data_access_file.write_text(json.dumps(discovery_events()), encoding="utf-8")
         tuning_file.write_text(json.dumps(tuning_rules()), encoding="utf-8")
 
         # Stage 1: event correlation.
@@ -119,7 +136,7 @@ class TestEndToEndPipeline(unittest.TestCase):
             event_correlation.main()
 
         # Stage 2: behaviour detection.
-        run_behaviour(audit_file, behaviour_file)
+        run_behaviour(audit_file, behaviour_file, data_access_file)
 
         # Stage 3: SOC classifier (rules, MITRE, priority, tuning).
         original_loader = alert_classifier.load_correlation_records
@@ -169,10 +186,15 @@ class TestEndToEndPipeline(unittest.TestCase):
         found = {item["rule_id"] for item in self.correlations["correlations"]}
         self.assertTrue({"CORR-001", "CORR-002", "CORR-003"} <= found)
 
-    def test_behaviour_engine_finds_all_three_patterns(self):
+    def test_behaviour_engine_finds_attack_and_discovery_patterns(self):
         self.assertEqual(
             set(self.behaviour["rule_summary"]),
-            {"BEHAV-001", "BEHAV-002", "BEHAV-003"},
+            {"BEHAV-001", "BEHAV-002", "BEHAV-003", "BEHAV-004"},
+        )
+
+    def test_discovery_reads_do_not_become_individual_alerts(self):
+        self.assertFalse(
+            any(alert["alert_id"].startswith("disc-") for alert in self.alerts)
         )
 
     # Stage 3: classifier
@@ -319,6 +341,7 @@ class TestEndToEndPipeline(unittest.TestCase):
         }
         self.assertTrue(tactics["Persistence"]["active"])
         self.assertTrue(tactics["Privilege Escalation"]["active"])
+        self.assertTrue(tactics["Discovery"]["active"])
 
 
 if __name__ == "__main__":

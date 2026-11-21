@@ -1,9 +1,14 @@
 """
 Behaviour Alert Integration.
 
-Runs the behaviour-based detection rules (BEHAV-001, BEHAV-002,
-BEHAV-003) against collected GCP audit events and writes the results
-to reports/gcp_behaviour_alerts.json.
+Runs the behaviour-based detection rules (BEHAV-001 to BEHAV-005)
+against collected GCP audit events and writes the results to
+reports/gcp_behaviour_alerts.json.
+
+Inputs:
+- reports/gcp_audit_logs.json: Admin Activity events (BEHAV-001 to 003)
+- reports/gcp_data_access_logs.json: Data Access ADMIN_READ events
+  (BEHAV-004 and BEHAV-005 discovery rules)
 
 The SOC alert classifier reads that report and merges the behaviour
 alerts into consolidated_soc_alerts.json, in the same way it already
@@ -21,12 +26,16 @@ from pathlib import Path
 try:
     from detection.behaviour_anomaly_detector import (
         detect_admin_activity_spike,
+        detect_cloud_account_enumeration,
+        detect_iam_permission_discovery,
         detect_repeated_service_enablement,
         detect_unusual_service_account_activity,
     )
 except ImportError:  # Script run directly: python detection/<file>.py
     from behaviour_anomaly_detector import (
         detect_admin_activity_spike,
+        detect_cloud_account_enumeration,
+        detect_iam_permission_discovery,
         detect_repeated_service_enablement,
         detect_unusual_service_account_activity,
     )
@@ -35,12 +44,15 @@ except ImportError:  # Script run directly: python detection/<file>.py
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 INPUT_FILE = BASE_DIR / "reports" / "gcp_audit_logs.json"
+DATA_ACCESS_FILE = BASE_DIR / "reports" / "gcp_data_access_logs.json"
 OUTPUT_FILE = BASE_DIR / "reports" / "gcp_behaviour_alerts.json"
 
 BEHAVIOUR_DETECTORS = (
     detect_admin_activity_spike,
     detect_repeated_service_enablement,
     detect_unusual_service_account_activity,
+    detect_cloud_account_enumeration,
+    detect_iam_permission_discovery,
 )
 
 
@@ -113,8 +125,24 @@ def build_behaviour_report(events, results):
     }
 
 
-def main(input_file=INPUT_FILE, output_file=OUTPUT_FILE):
+def main(input_file=None, output_file=OUTPUT_FILE, data_access_file=None):
+    """
+    Run behaviour detection.
+
+    With no arguments, reads the default Admin Activity and Data Access
+    reports. When input_file is given, only the files passed explicitly
+    are read (so tests never pick up real local logs).
+    """
+
+    if input_file is None:
+        input_file = INPUT_FILE
+        data_access_file = DATA_ACCESS_FILE
+
     events = load_audit_events(input_file)
+
+    if data_access_file is not None:
+        events = events + load_audit_events(data_access_file)
+
     results = run_behaviour_detection(events)
     report = build_behaviour_report(events, results)
 

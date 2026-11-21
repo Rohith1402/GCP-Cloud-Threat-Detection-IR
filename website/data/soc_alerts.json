@@ -1,42 +1,43 @@
 {
   "source": "PYTHON_DETECTION_PIPELINE",
-  "generated_at": "2026-11-21T05:31:22.774791+00:00",
+  "generated_at": "2026-11-21T06:42:32.280466+00:00",
   "summary": {
-    "total_alerts": 21,
-    "active_alerts": 16,
-    "suppressed_alerts": 1,
+    "total_alerts": 27,
+    "active_alerts": 20,
+    "suppressed_alerts": 3,
     "rolled_up_alerts": 4,
     "severity": {
       "CRITICAL": 5,
       "HIGH": 3,
       "MEDIUM": 5,
-      "LOW": 3
+      "LOW": 7
     },
     "priority": {
       "P1": 5,
       "P2": 3,
       "P3": 3,
-      "P4": 5
+      "P4": 9
     },
     "data_labels": {
-      "REAL": 10,
+      "REAL": 16,
       "SYNTHETIC": 11
     },
     "rules": {
       "GCP-IAM-006": 1,
       "GCP-SCC-001": 1,
+      "GCP-IAM-001": 3,
       "GCP-IAM-002": 2,
       "GCP-SCC-002": 1,
       "GCP-SCC-003": 1,
-      "GCP-IAM-001": 2,
       "GCP-SA-001": 1,
       "BEHAV-002": 1,
       "GCP-IAM-005": 1,
+      "BEHAV-005": 1,
       "GCP-SCC-004": 1,
       "GCP-IAM-004": 1,
-      "GENERAL-001": 8
+      "GENERAL-001": 12
     },
-    "behaviour_alerts": 1,
+    "behaviour_alerts": 2,
     "correlation_alerts": 0,
     "ai_triaged_alerts": 8
   },
@@ -73,12 +74,34 @@
       "confidence": "MEDIUM",
       "mitre_technique": "T1098.001",
       "mitre_name": "Additional Cloud Credentials"
+    },
+    {
+      "rule_id": "BEHAV-004",
+      "name": "Cloud Account Enumeration",
+      "description": "Burst of service-account and key enumeration by one principal using several different discovery methods. Common in administration; requires contextual review.",
+      "window_minutes": 10,
+      "threshold": 6,
+      "risk_score": 50,
+      "confidence": "LOW",
+      "mitre_technique": "T1087.004",
+      "mitre_name": "Account Discovery: Cloud Account"
+    },
+    {
+      "rule_id": "BEHAV-005",
+      "name": "IAM Permission Discovery",
+      "description": "Burst of IAM policy, permission and role queries by one principal using more than one discovery method. Common in administration; requires contextual review.",
+      "window_minutes": 10,
+      "threshold": 6,
+      "risk_score": 50,
+      "confidence": "LOW",
+      "mitre_technique": "T1069.003",
+      "mitre_name": "Permission Groups Discovery: Cloud Groups"
     }
   ],
   "detection_quality": {
-    "total_alerts": 21,
-    "active_alerts": 16,
-    "suppressed_alerts": 1,
+    "total_alerts": 27,
+    "active_alerts": 20,
+    "suppressed_alerts": 3,
     "rolled_up_alerts": 4,
     "rules": [
       {
@@ -92,14 +115,24 @@
         "noise_rate": 1.0
       },
       {
-        "rule_id": "GCP-IAM-001",
-        "fired": 2,
-        "active": 2,
-        "suppressed": 0,
+        "rule_id": "BEHAV-005",
+        "fired": 1,
+        "active": 0,
+        "suppressed": 1,
         "rolled_up": 0,
-        "benign_true_positive": 0,
+        "benign_true_positive": 1,
         "false_positive": 0,
-        "noise_rate": 0.0
+        "noise_rate": 1.0
+      },
+      {
+        "rule_id": "GCP-IAM-001",
+        "fired": 3,
+        "active": 2,
+        "suppressed": 1,
+        "rolled_up": 0,
+        "benign_true_positive": 1,
+        "false_positive": 0,
+        "noise_rate": 0.33
       },
       {
         "rule_id": "GCP-IAM-002",
@@ -193,13 +226,13 @@
       },
       {
         "rule_id": "GENERAL-001",
-        "fired": 8,
-        "active": 4,
+        "fired": 12,
+        "active": 8,
         "suppressed": 0,
         "rolled_up": 4,
         "benign_true_positive": 0,
         "false_positive": 0,
-        "noise_rate": 0.5
+        "noise_rate": 0.33
       }
     ],
     "tuning_rules": [
@@ -209,16 +242,30 @@
         "disposition": "BENIGN_TRUE_POSITIVE",
         "expires_on": "2027-02-20",
         "state": "ACTIVE"
+      },
+      {
+        "tuning_id": "TUNE-002",
+        "rule_id": "GCP-IAM-001",
+        "disposition": "BENIGN_TRUE_POSITIVE",
+        "expires_on": "2027-02-21",
+        "state": "ACTIVE"
+      },
+      {
+        "tuning_id": "TUNE-003",
+        "rule_id": "BEHAV-005",
+        "disposition": "BENIGN_TRUE_POSITIVE",
+        "expires_on": "2027-02-21",
+        "state": "ACTIVE"
       }
     ]
   },
   "mitre_coverage": {
     "total_tactics": 14,
-    "covered_tactics": 7,
-    "active_tactics": 6,
-    "mapped_rules": 14,
-    "total_rules": 18,
-    "unique_techniques": 9,
+    "covered_tactics": 8,
+    "active_tactics": 7,
+    "mapped_rules": 16,
+    "total_rules": 20,
+    "unique_techniques": 11,
     "tactics": [
       {
         "tactic_id": "TA0043",
@@ -390,10 +437,27 @@
       {
         "tactic_id": "TA0007",
         "tactic_name": "Discovery",
-        "covered": false,
-        "active": false,
-        "rule_count": 0,
-        "techniques": []
+        "covered": true,
+        "active": true,
+        "rule_count": 2,
+        "techniques": [
+          {
+            "technique_id": "T1069.003",
+            "technique_name": "Permission Groups Discovery: Cloud Groups",
+            "rules": [
+              "BEHAV-005"
+            ],
+            "active": true
+          },
+          {
+            "technique_id": "T1087.004",
+            "technique_name": "Account Discovery: Cloud Account",
+            "rules": [
+              "BEHAV-004"
+            ],
+            "active": false
+          }
+        ]
       },
       {
         "tactic_id": "TA0008",
@@ -491,7 +555,7 @@
         {
           "factor": "Multiple signals",
           "adjustment": 10,
-          "reason": "3 different rules fired for this principal"
+          "reason": "5 different rules fired for this principal"
         },
         {
           "factor": "High-impact tactic",
@@ -510,22 +574,22 @@
         "Privilege Escalation",
         "Defense Evasion"
       ],
-      "timestamp": "2026-11-15T16:19:46.040796+00:00",
+      "timestamp": "2026-11-21T06:42:15.321118+00:00",
       "status": "OPEN",
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
       "ai_triage": {
-        "summary": "A user account was flagged for possessing a combination of sensitive IAM capabilities. The alert, titled \"Sensitive IAM Permission Combination,\" indicates potential privilege escalation and defense evasion. The principal has permissions such as `iam.roles.create` and `iam.serviceaccountkeys.create`.",
-        "why_it_matters": "The detected permissions allow for actions that could grant elevated access, such as creating roles or service account keys. This signal aligns with the MITRE technique T1548.005, Temporary Elevated Cloud Access.",
+        "summary": "A CRITICAL alert was generated due to the detection of sensitive IAM capabilities associated with a user account. The rule, 'Sensitive IAM Permission Combination,' identified multiple risky permissions, including `iam.roles.create` and `iam.serviceaccountkeys.create`.",
+        "why_it_matters": "The combination of these permissions suggests a potential Privilege Escalation or Defense Evasion attempt, aligning with MITRE technique T1548.005.",
         "next_steps": [
           "Review the effective permissions for the principal.",
-          "Check the change history of role assignments.",
-          "Determine if the access is necessary and authorized."
+          "Check the change history for role assignments.",
+          "Determine if the detected access is necessary and authorized."
         ],
         "label": "AI-generated: analyst review required",
         "model": "gemma4:e4b",
-        "generated_at": "2026-11-21T05:26:06.761652+00:00"
+        "generated_at": "2026-11-21T06:42:15.504296+00:00"
       },
       "recommendation": "Review effective permissions, principal, role assignment, permission combinations and change history. Determine whether the access is necessary and authorised.",
       "evidence": null
@@ -573,6 +637,62 @@
         "generated_at": "2026-11-21T05:26:06.761652+00:00"
       },
       "recommendation": "Verify whether public access is intended. Review bucket IAM and ACL policies, exposed data and access logs.",
+      "evidence": null
+    },
+    {
+      "alert_id": "f9yp58e1a4yk",
+      "rule_id": "GCP-IAM-001",
+      "rule_name": "IAM Policy Modification",
+      "severity": "HIGH",
+      "risk_score": 80,
+      "priority": "P1",
+      "priority_score": 100,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 80,
+          "reason": "Base score from GCP-IAM-001"
+        },
+        {
+          "factor": "Privileged principal",
+          "adjustment": 10,
+          "reason": "Principal also has privilege findings: GCP-IAM-005, GCP-IAM-006"
+        },
+        {
+          "factor": "Multiple signals",
+          "adjustment": 10,
+          "reason": "5 different rules fired for this principal"
+        },
+        {
+          "factor": "High-impact tactic",
+          "adjustment": 5,
+          "reason": "MITRE tactic: Privilege Escalation"
+        }
+      ],
+      "confidence": "MEDIUM",
+      "source_module": "gcp_audit_logs",
+      "data_label": "REAL",
+      "principal": "user-01",
+      "description": "GCP Cloud Audit event: SetIamPolicy. Service: cloudresourcemanager.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
+      "mitre_technique_id": "T1098.003",
+      "mitre_technique_name": "Additional Cloud Roles",
+      "mitre_tactics": [
+        "Persistence",
+        "Privilege Escalation"
+      ],
+      "timestamp": "2026-11-21T05:51:22.259551+00:00",
+      "status": "SUPPRESSED",
+      "disposition": "BENIGN_TRUE_POSITIVE",
+      "covered_by": null,
+      "tuning": {
+        "tuning_id": "TUNE-002",
+        "justification": "IAM policy change on 21 Nov 2026 by the project owner to enable Admin Read Data Access audit logs for the IAM and Cloud Resource Manager APIs. Only auditConfigs were added; a pre-change check confirmed role bindings were unchanged.",
+        "approved_by": "Project owner (SOC lab analyst)",
+        "approved_on": "2026-11-21",
+        "expires_on": "2027-02-21"
+      },
+      "ai_triage": null,
+      "recommendation": "Review the actor, affected resource, IAM policy changes, added or removed members, granted roles and authorisation.",
       "evidence": null
     },
     {
@@ -933,7 +1053,7 @@
         {
           "factor": "Multiple signals",
           "adjustment": 10,
-          "reason": "3 different rules fired for this principal"
+          "reason": "5 different rules fired for this principal"
         }
       ],
       "confidence": "LOW",
@@ -1006,7 +1126,7 @@
         {
           "factor": "Multiple signals",
           "adjustment": 10,
-          "reason": "3 different rules fired for this principal"
+          "reason": "5 different rules fired for this principal"
         },
         {
           "factor": "High-impact tactic",
@@ -1025,7 +1145,7 @@
         "Persistence",
         "Privilege Escalation"
       ],
-      "timestamp": "2026-11-15T16:19:38.967189+00:00",
+      "timestamp": "2026-11-21T06:42:15.303991+00:00",
       "status": "OPEN",
       "disposition": "UNREVIEWED",
       "covered_by": null,
@@ -1033,6 +1153,139 @@
       "ai_triage": null,
       "recommendation": "Verify who assigned the privileged role, when it was assigned, its scope and whether the assignment was approved.",
       "evidence": null
+    },
+    {
+      "alert_id": "BEHAV-005-cdph1e1hakc",
+      "rule_id": "BEHAV-005",
+      "rule_name": "IAM Permission Discovery",
+      "severity": "MEDIUM",
+      "risk_score": 50,
+      "priority": "P3",
+      "priority_score": 60,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 50,
+          "reason": "Base score from BEHAV-005"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        },
+        {
+          "factor": "Privileged principal",
+          "adjustment": 10,
+          "reason": "Principal also has privilege findings: GCP-IAM-005, GCP-IAM-006"
+        },
+        {
+          "factor": "Multiple signals",
+          "adjustment": 10,
+          "reason": "5 different rules fired for this principal"
+        }
+      ],
+      "confidence": "LOW",
+      "source_module": "gcp_behaviour_alerts",
+      "data_label": "REAL",
+      "principal": "user-01",
+      "description": "Burst of IAM policy, permission and role queries by one principal using more than one discovery method. Common in administration; requires contextual review.",
+      "mitre_technique_id": "T1069.003",
+      "mitre_technique_name": "Permission Groups Discovery: Cloud Groups",
+      "mitre_tactics": [
+        "Discovery"
+      ],
+      "timestamp": "2026-11-21T06:35:04.506076+00:00",
+      "status": "SUPPRESSED",
+      "disposition": "BENIGN_TRUE_POSITIVE",
+      "covered_by": null,
+      "tuning": {
+        "tuning_id": "TUNE-003",
+        "justification": "Authorised detection validation test on 21 Nov 2026: the project owner ran a scripted IAM permission discovery sequence to validate BEHAV-005 on real Data Access logs. The rule fired as intended.",
+        "approved_by": "Project owner (SOC lab analyst)",
+        "approved_on": "2026-11-21",
+        "expires_on": "2027-02-21"
+      },
+      "ai_triage": null,
+      "recommendation": "Review the principal's activity and validate its business justification. Investigate related audit events before taking response action.",
+      "evidence": {
+        "event_count": 12,
+        "first_seen": "2026-11-21T06:35:04.506076+00:00",
+        "last_seen": "2026-11-21T06:36:43.226989+00:00",
+        "events": [
+          {
+            "event_id": "cdph1e1hakc",
+            "timestamp": "2026-11-21T06:35:04.506076+00:00",
+            "method_name": "GetIamPolicy",
+            "service_name": "cloudresourcemanager.googleapis.com"
+          },
+          {
+            "event_id": "2i0yojdu86f",
+            "timestamp": "2026-11-21T06:35:06.627616+00:00",
+            "method_name": "google.iam.admin.v1.QueryGrantableRoles",
+            "service_name": "iam.googleapis.com"
+          },
+          {
+            "event_id": "15nvf5tds6px",
+            "timestamp": "2026-11-21T06:35:07.830955+00:00",
+            "method_name": "google.iam.admin.v1.QueryGrantableRoles",
+            "service_name": "iam.googleapis.com"
+          },
+          {
+            "event_id": "-ain2uee1vr2g",
+            "timestamp": "2026-11-21T06:35:12.340305+00:00",
+            "method_name": "GetIamPolicy",
+            "service_name": "cloudresourcemanager.googleapis.com"
+          },
+          {
+            "event_id": "134hz8bdo1zv",
+            "timestamp": "2026-11-21T06:35:14.188692+00:00",
+            "method_name": "google.iam.admin.v1.QueryGrantableRoles",
+            "service_name": "iam.googleapis.com"
+          },
+          {
+            "event_id": "15nvf5tds6qj",
+            "timestamp": "2026-11-21T06:35:15.424579+00:00",
+            "method_name": "google.iam.admin.v1.QueryGrantableRoles",
+            "service_name": "iam.googleapis.com"
+          },
+          {
+            "event_id": "j5ecmue1k2vo",
+            "timestamp": "2026-11-21T06:36:32.232467+00:00",
+            "method_name": "GetIamPolicy",
+            "service_name": "cloudresourcemanager.googleapis.com"
+          },
+          {
+            "event_id": "msv34ldw7l3",
+            "timestamp": "2026-11-21T06:36:34.228995+00:00",
+            "method_name": "google.iam.admin.v1.QueryGrantableRoles",
+            "service_name": "iam.googleapis.com"
+          },
+          {
+            "event_id": "1pxjhyudoc84",
+            "timestamp": "2026-11-21T06:36:35.423077+00:00",
+            "method_name": "google.iam.admin.v1.QueryGrantableRoles",
+            "service_name": "iam.googleapis.com"
+          },
+          {
+            "event_id": "kafh97e1ft3q",
+            "timestamp": "2026-11-21T06:36:38.806303+00:00",
+            "method_name": "GetIamPolicy",
+            "service_name": "cloudresourcemanager.googleapis.com"
+          },
+          {
+            "event_id": "bnrou3dmsa7",
+            "timestamp": "2026-11-21T06:36:40.822289+00:00",
+            "method_name": "google.iam.admin.v1.QueryGrantableRoles",
+            "service_name": "iam.googleapis.com"
+          },
+          {
+            "event_id": "g4xi7pe11nic",
+            "timestamp": "2026-11-21T06:36:43.226989+00:00",
+            "method_name": "google.iam.admin.v1.QueryGrantableRoles",
+            "service_name": "iam.googleapis.com"
+          }
+        ]
+      }
     },
     {
       "alert_id": "scc-004",
@@ -1327,6 +1580,154 @@
       "status": "ROLLED_UP",
       "disposition": "UNREVIEWED",
       "covered_by": "BEHAV-002-wqyfrndcjti",
+      "tuning": null,
+      "ai_triage": null,
+      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
+      "evidence": null
+    },
+    {
+      "alert_id": "2t6hchd8iaw",
+      "rule_id": "GENERAL-001",
+      "rule_name": "General Security Activity",
+      "severity": "LOW",
+      "risk_score": 10,
+      "priority": "P4",
+      "priority_score": 0,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 10,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
+      "confidence": "LOW",
+      "source_module": "gcp_audit_logs",
+      "data_label": "REAL",
+      "principal": "user-01",
+      "description": "GCP Cloud Audit event: UpdateProject. Service: cloudresourcemanager.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
+      "mitre_technique_id": null,
+      "mitre_technique_name": null,
+      "mitre_tactics": [],
+      "timestamp": "2026-11-19T04:58:20.221680+00:00",
+      "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
+      "ai_triage": null,
+      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
+      "evidence": null
+    },
+    {
+      "alert_id": "-c6azr3dhi9a",
+      "rule_id": "GENERAL-001",
+      "rule_name": "General Security Activity",
+      "severity": "LOW",
+      "risk_score": 10,
+      "priority": "P4",
+      "priority_score": 0,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 10,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
+      "confidence": "LOW",
+      "source_module": "gcp_audit_logs",
+      "data_label": "REAL",
+      "principal": "user-01",
+      "description": "GCP Cloud Audit event: UpdateProject. Service: cloudresourcemanager.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
+      "mitre_technique_id": null,
+      "mitre_technique_name": null,
+      "mitre_tactics": [],
+      "timestamp": "2026-11-19T04:48:32.026143+00:00",
+      "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
+      "ai_triage": null,
+      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
+      "evidence": null
+    },
+    {
+      "alert_id": "vnfgtycika",
+      "rule_id": "GENERAL-001",
+      "rule_name": "General Security Activity",
+      "severity": "LOW",
+      "risk_score": 10,
+      "priority": "P4",
+      "priority_score": 0,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 10,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
+      "confidence": "LOW",
+      "source_module": "gcp_audit_logs",
+      "data_label": "REAL",
+      "principal": "user-01",
+      "description": "GCP Cloud Audit event: CreateClient. Service: clientauthconfig.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
+      "mitre_technique_id": null,
+      "mitre_technique_name": null,
+      "mitre_tactics": [],
+      "timestamp": "2026-11-17T15:05:48.938772+00:00",
+      "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
+      "tuning": null,
+      "ai_triage": null,
+      "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
+      "evidence": null
+    },
+    {
+      "alert_id": "g3fz2hcoho",
+      "rule_id": "GENERAL-001",
+      "rule_name": "General Security Activity",
+      "severity": "LOW",
+      "risk_score": 10,
+      "priority": "P4",
+      "priority_score": 0,
+      "score_factors": [
+        {
+          "factor": "Rule risk score",
+          "adjustment": 10,
+          "reason": "Base score from GENERAL-001"
+        },
+        {
+          "factor": "Confidence",
+          "adjustment": -10,
+          "reason": "Low confidence detection"
+        }
+      ],
+      "confidence": "LOW",
+      "source_module": "gcp_audit_logs",
+      "data_label": "REAL",
+      "principal": "user-01",
+      "description": "GCP Cloud Audit event: CreateBrand. Service: clientauthconfig.googleapis.com. This event requires contextual review and is not confirmation of malicious activity.",
+      "mitre_technique_id": null,
+      "mitre_technique_name": null,
+      "mitre_tactics": [],
+      "timestamp": "2026-11-17T15:05:27.254545+00:00",
+      "status": "OPEN",
+      "disposition": "UNREVIEWED",
+      "covered_by": null,
       "tuning": null,
       "ai_triage": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",

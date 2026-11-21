@@ -66,8 +66,8 @@ class TestMappingCatalogue(unittest.TestCase):
             with self.subTest(rule=rule_id):
                 self.assertTrue(reason.strip())
 
-    def test_coverage_is_fourteen_of_eighteen_rules(self):
-        self.assertEqual(len(MITRE_MAPPINGS), 14)
+    def test_coverage_is_sixteen_of_twenty_rules(self):
+        self.assertEqual(len(MITRE_MAPPINGS), 16)
         self.assertEqual(len(UNMAPPED_RULES), 4)
 
     def test_behaviour_detector_agrees_with_mapping(self):
@@ -190,13 +190,13 @@ class TestCoverageMatrix(unittest.TestCase):
         self.assertEqual(set(names), ENTERPRISE_TACTICS)
 
     def test_coverage_totals(self):
-        self.assertEqual(self.coverage["covered_tactics"], 7)
-        self.assertEqual(self.coverage["mapped_rules"], 14)
-        self.assertEqual(self.coverage["total_rules"], 18)
-        self.assertEqual(self.coverage["unique_techniques"], 9)
+        self.assertEqual(self.coverage["covered_tactics"], 8)
+        self.assertEqual(self.coverage["mapped_rules"], 16)
+        self.assertEqual(self.coverage["total_rules"], 20)
+        self.assertEqual(self.coverage["unique_techniques"], 11)
 
     def test_gaps_are_reported_as_uncovered(self):
-        for tactic in ("Reconnaissance", "Discovery", "Exfiltration"):
+        for tactic in ("Reconnaissance", "Lateral Movement", "Exfiltration"):
             with self.subTest(tactic=tactic):
                 self.assertFalse(self.tactics[tactic]["covered"])
                 self.assertEqual(self.tactics[tactic]["techniques"], [])

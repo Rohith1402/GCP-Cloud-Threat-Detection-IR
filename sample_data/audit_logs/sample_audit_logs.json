@@ -8,7 +8,7 @@
       "protoPayload": {
         "serviceName": "cloudresourcemanager.googleapis.com",
         "methodName": "SetIamPolicy",
-        "resourceName": "projects/gcp-cloud-security-lab-514814",
+        "resourceName": "projects/synthetic-security-lab",
         "authenticationInfo": {
           "principalEmail": "admin@example.com"
         },
@@ -24,7 +24,7 @@
       "protoPayload": {
         "serviceName": "iam.googleapis.com",
         "methodName": "google.iam.admin.v1.CreateServiceAccountKey",
-        "resourceName": "projects/gcp-cloud-security-lab-514814/serviceAccounts/test-account",
+        "resourceName": "projects/synthetic-security-lab/serviceAccounts/test-account",
         "authenticationInfo": {
           "principalEmail": "unknown-user@example.com"
         },
@@ -40,7 +40,7 @@
       "protoPayload": {
         "serviceName": "iam.googleapis.com",
         "methodName": "google.iam.admin.v1.CreateServiceAccount",
-        "resourceName": "projects/gcp-cloud-security-lab-514814/serviceAccounts/new-account",
+        "resourceName": "projects/synthetic-security-lab/serviceAccounts/new-account",
         "authenticationInfo": {
           "principalEmail": "developer@example.com"
         },
@@ -56,7 +56,7 @@
       "protoPayload": {
         "serviceName": "cloudresourcemanager.googleapis.com",
         "methodName": "SetIamPolicy",
-        "resourceName": "projects/gcp-cloud-security-lab-514814",
+        "resourceName": "projects/synthetic-security-lab",
         "authenticationInfo": {
           "principalEmail": "admin@example.com"
         },

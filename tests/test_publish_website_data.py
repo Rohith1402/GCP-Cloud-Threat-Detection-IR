@@ -15,7 +15,7 @@ from detection.publish_website_data import (
 
 REAL_EMAIL = "real.person@gmail.com"
 REAL_PROJECT = "my-security-lab-123456"
-PROJECT_NUMBER = "456513016005"
+PROJECT_NUMBER = "123456789012"
 
 
 def make_alerts():
@@ -288,7 +288,10 @@ class TestPublicReport(unittest.TestCase):
         rule_ids = [
             rule["rule_id"] for rule in self.report["behaviour_rules"]
         ]
-        self.assertEqual(rule_ids, ["BEHAV-001", "BEHAV-002", "BEHAV-003"])
+        self.assertEqual(
+            rule_ids,
+            ["BEHAV-001", "BEHAV-002", "BEHAV-003", "BEHAV-004", "BEHAV-005"],
+        )
 
 
 class TestPublishFile(unittest.TestCase):

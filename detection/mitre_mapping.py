@@ -110,6 +110,18 @@ MITRE_MAPPINGS = {
         "tactics": ["Persistence", "Privilege Escalation"],
         "rationale": "Service account created, then a key generated for it.",
     },
+    "BEHAV-004": {
+        "technique_id": "T1087.004",
+        "technique_name": "Account Discovery: Cloud Account",
+        "tactics": ["Discovery"],
+        "rationale": "Systematic enumeration of service accounts and keys.",
+    },
+    "BEHAV-005": {
+        "technique_id": "T1069.003",
+        "technique_name": "Permission Groups Discovery: Cloud Groups",
+        "tactics": ["Discovery"],
+        "rationale": "Systematic queries of IAM policies, permissions and roles.",
+    },
 }
 
 
