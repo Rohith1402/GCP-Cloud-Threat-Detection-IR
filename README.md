@@ -21,13 +21,13 @@ A free, end-to-end Google Cloud threat detection and SOC project built in Python
 
 ## Screenshots
 
-| Prioritised alert queue | MITRE ATT&CK coverage |
+| Prioritised alert queue with AI triage | MITRE ATT&CK coverage |
 |---|---|
-| ![Prioritised alerts with P1–P4 priority, data labels and MITRE techniques](docs/screenshots/alerts.png) | ![MITRE ATT&CK coverage matrix: 7 of 14 tactics covered](docs/screenshots/mitre-coverage.png) |
+| ![Prioritised alerts with P1–P4 priority, data labels, MITRE techniques and an expanded AI triage note](docs/screenshots/alerts.png) | ![MITRE ATT&CK coverage matrix: 8 of 14 tactics covered](docs/screenshots/mitre-coverage.png) |
 
 | Alert tuning and detection quality | Behaviour-based detection |
 |---|---|
-| ![Suppressed benign true positive with justification and expiry, roll-up and per-rule noise rates](docs/screenshots/tuning.png) | ![Behaviour rules BEHAV-001 to BEHAV-003 with triggered alert evidence](docs/screenshots/behaviour.png) |
+| ![Suppressed benign true positive with justification and expiry, roll-up and per-rule noise rates](docs/screenshots/tuning.png) | ![Behaviour rules BEHAV-001 to BEHAV-005 with triggered alert evidence](docs/screenshots/behaviour.png) |
 
 All screenshots show real pipeline output from the public site: identities are masked and real GCP data is labelled separately from synthetic training scenarios.
 
