@@ -55,9 +55,9 @@ RULES = {
     "BEHAV-004": {
         "name": "Cloud Account Enumeration",
         "description": (
-            "Burst of service-account and key enumeration by one "
-            "principal using several different discovery methods. "
-            "Common in administration; requires contextual review."
+            "Burst of programmatic (API/CLI) service-account and key "
+            "enumeration by one principal using several different "
+            "discovery methods. Requires contextual review."
         ),
         "risk_score": 50,
         "confidence": "LOW",
@@ -70,9 +70,9 @@ RULES = {
     "BEHAV-005": {
         "name": "IAM Permission Discovery",
         "description": (
-            "Burst of IAM policy, permission and role queries by one "
-            "principal using more than one discovery method. "
-            "Common in administration; requires contextual review."
+            "Burst of programmatic (API/CLI) IAM policy, permission and "
+            "role queries by one principal using more than one discovery "
+            "method. Requires contextual review."
         ),
         "risk_score": 50,
         "confidence": "LOW",
@@ -116,6 +116,18 @@ PERMISSION_DISCOVERY_METHODS = (
     "listroles",
     "getrole",
 )
+
+
+# Discovery rules count only programmatic access (gcloud, API, SDK).
+# Real-data validation (21 Nov 2026) showed ordinary console browsing of
+# IAM pages produces dozens of QueryGrantableRoles / ListRoles calls and
+# triggered BEHAV-005. Events without a client_type (older or simulated
+# data) still count. Known gap: manual enumeration in the console.
+DISCOVERY_EXCLUDED_CLIENTS = {"console"}
+
+
+def is_programmatic(event):
+    return str(event.get("client_type") or "").lower() not in DISCOVERY_EXCLUDED_CLIENTS
 
 
 def method_key(event):
@@ -346,7 +358,7 @@ def _detect_discovery(events, rule_id, methods):
     results = []
 
     def predicate(event):
-        return method_key(event) in methods
+        return method_key(event) in methods and is_programmatic(event)
 
     for principal, principal_events in group_by_principal(prepared).items():
         for window_events in find_breadth_windows(

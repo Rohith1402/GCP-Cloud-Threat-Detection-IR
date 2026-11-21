@@ -160,6 +160,40 @@ class TestPermissionDiscovery(unittest.TestCase):
         ]
         self.assertEqual(detect_iam_permission_discovery(events), [])
 
+    def test_real_console_browsing_does_not_fire(self):
+        """Replays the console session from 21 Nov 2026 that caused a false positive."""
+
+        methods = (
+            ["google.iam.admin.v1.QueryGrantableRoles"] * 25
+            + ["google.iam.admin.v1.ListRoles"] * 4
+            + ["google.iam.admin.v1.ListServiceAccounts"] * 2
+        )
+        events = [
+            dict(read_event(f"console-{i}", i * 10, method, source="gcp_cloud_audit_logs"), client_type="console")
+            for i, method in enumerate(methods)
+        ]
+
+        self.assertEqual(detect_iam_permission_discovery(events), [])
+        self.assertEqual(detect_cloud_account_enumeration(events), [])
+
+    def test_programmatic_enumeration_still_fires_alongside_console_noise(self):
+        programmatic = [
+            dict(read_event(f"cli-{i}", i * 8, method), client_type="gcloud")
+            for i, method in enumerate(["GetIamPolicy", "QueryGrantableRoles", "QueryGrantableRoles"] * 2)
+        ]
+        console = [
+            dict(read_event(f"web-{i}", 5 + i * 8, "QueryGrantableRoles"), client_type="console")
+            for i in range(10)
+        ]
+
+        results = detect_iam_permission_discovery(programmatic + console)
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(
+            {event["event_id"] for event in results[0]["evidence"]},
+            {event["event_id"] for event in programmatic},
+        )
+
     def test_repeated_policy_reads_do_not_fire(self):
         reads = [read_event(f"gip-{i}", i * 15, "GetIamPolicy") for i in range(10)]
         self.assertEqual(detect_iam_permission_discovery(reads), [])

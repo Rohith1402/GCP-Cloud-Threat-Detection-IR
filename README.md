@@ -469,8 +469,8 @@ Phase 4 looks at who acted, how often and how quickly.
 | BEHAV-001 | Administrative activity spike (sensitive IAM operations) | 10 min | 5 | 70 | MEDIUM | T1098 Account Manipulation |
 | BEHAV-002 | Repeated service enablement | 15 min | 3 | 55 | LOW | - |
 | BEHAV-003 | Service-account creation followed by key creation | 60 min | 2 | 65 | MEDIUM | T1098.001 Additional Cloud Credentials |
-| BEHAV-004 | Cloud account enumeration: service-account and key discovery calls using ≥ 3 different methods | 10 min | 6 | 50 | LOW | T1087.004 Account Discovery: Cloud Account |
-| BEHAV-005 | IAM permission discovery: policy, permission and role queries using ≥ 2 different methods | 10 min | 6 | 50 | LOW | T1069.003 Permission Groups Discovery: Cloud Groups |
+| BEHAV-004 | Cloud account enumeration: programmatic service-account and key discovery calls using ≥ 3 different methods | 10 min | 6 | 50 | LOW | T1087.004 Account Discovery: Cloud Account |
+| BEHAV-005 | IAM permission discovery: programmatic policy, permission and role queries using ≥ 2 different methods | 10 min | 6 | 50 | LOW | T1069.003 Permission Groups Discovery: Cloud Groups |
 
 Design choices:
 
@@ -589,12 +589,13 @@ The discovery rules were tested against real activity in the lab project on 21 N
 |---|---|---|
 | `gcloud` enumeration: `get-iam-policy`, `list-grantable-roles`, `roles describe` × 2 | GetIamPolicy × 2, QueryGrantableRoles × 4. `roles describe` (GetRole) **not logged** | 6 calls, 2 methods |
 | Same, plus `testIamPermissions` via the REST API | testIamPermissions **not logged** | 12 calls, 2 methods |
-| Console browsing of IAM pages | Not yet tested | Planned: confirm normal console use does not fire |
+| Console browsing of the IAM, Service Accounts and Roles pages (~7 min) | 197 events, mostly GetResourceBillingInfo and GetProject, plus QueryGrantableRoles × ~25, ListRoles × 4, ListServiceAccounts × 2 (all `client_type` = console) | BEHAV-005 **fired: false positive**, fixed (see below) |
 
 Findings and tuning decisions:
 
-- In this setup, only `GetIamPolicy`, `QueryGrantableRoles` and `ListServiceAccounts` appear in Admin Read logs; `GetRole`, `ListRoles` and `testIamPermissions` leave no trace. Attacker tooling that relies on `testIamPermissions` is therefore invisible to log-based detection here. This is a documented **telemetry gap**, not a rule bug.
+- Via `gcloud` and the REST API, `GetIamPolicy`, `QueryGrantableRoles` and `ListServiceAccounts` were logged, while `GetRole` (predefined role) and `testIamPermissions` left no trace. Attacker tooling that relies on `testIamPermissions` is therefore invisible to log-based detection here. This is a documented **telemetry gap**, not a rule bug. (The console's own `ListRoles` calls were logged.)
 - BEHAV-005 originally required three different methods, so it could never fire on real data. It was tuned to **≥ 2 methods and ≥ 6 calls in 10 minutes**, which detects the real test above while repeated single-method reads still do not fire.
+- **False positive found and fixed:** ordinary console browsing generates many `QueryGrantableRoles` and `ListRoles` calls in the background, and BEHAV-005 fired on it. Thresholds could not separate the two cases (browsing produced *more* calls than the real enumeration test), but the client type could. BEHAV-004 and BEHAV-005 now count only **programmatic** access (gcloud, API, SDK) and ignore console-originated reads. A regression test replays the real console session. Known gap: someone enumerating manually in the console is not detected by these rules.
 - BEHAV-004 keeps **≥ 3 methods** and is validated on simulated scenarios only, because the lab project has no service accounts to enumerate.
 - A regression test replays the exact real-world method pattern, so future changes cannot silently break the tuned rule.
 

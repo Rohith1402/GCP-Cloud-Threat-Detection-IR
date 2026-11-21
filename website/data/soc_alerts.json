@@ -1,6 +1,6 @@
 {
   "source": "PYTHON_DETECTION_PIPELINE",
-  "generated_at": "2026-11-21T06:42:32.280466+00:00",
+  "generated_at": "2026-11-21T07:29:57.724305+00:00",
   "summary": {
     "total_alerts": 27,
     "active_alerts": 20,
@@ -78,7 +78,7 @@
     {
       "rule_id": "BEHAV-004",
       "name": "Cloud Account Enumeration",
-      "description": "Burst of service-account and key enumeration by one principal using several different discovery methods. Common in administration; requires contextual review.",
+      "description": "Burst of programmatic (API/CLI) service-account and key enumeration by one principal using several different discovery methods. Requires contextual review.",
       "window_minutes": 10,
       "threshold": 6,
       "risk_score": 50,
@@ -89,7 +89,7 @@
     {
       "rule_id": "BEHAV-005",
       "name": "IAM Permission Discovery",
-      "description": "Burst of IAM policy, permission and role queries by one principal using more than one discovery method. Common in administration; requires contextual review.",
+      "description": "Burst of programmatic (API/CLI) IAM policy, permission and role queries by one principal using more than one discovery method. Requires contextual review.",
       "window_minutes": 10,
       "threshold": 6,
       "risk_score": 50,
@@ -1188,7 +1188,7 @@
       "source_module": "gcp_behaviour_alerts",
       "data_label": "REAL",
       "principal": "user-01",
-      "description": "Burst of IAM policy, permission and role queries by one principal using more than one discovery method. Common in administration; requires contextual review.",
+      "description": "Burst of programmatic (API/CLI) IAM policy, permission and role queries by one principal using more than one discovery method. Requires contextual review.",
       "mitre_technique_id": "T1069.003",
       "mitre_technique_name": "Permission Groups Discovery: Cloud Groups",
       "mitre_tactics": [
