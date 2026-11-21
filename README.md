@@ -614,6 +614,32 @@ python3 detection/publish_website_data.py
 
 The website is deployed with Cloudflare Pages from the `website/` folder of the `main` branch. A separate Google Apps Script collector provides a sanitised live feed of Admin Activity events (timestamp, method, service, severity and status only).
 
+### Daily automatic update
+
+`scripts/daily_update.sh` runs the whole pipeline on the analyst's Mac once a day, scheduled by macOS **launchd** (`scripts/com.cybersoc.daily-update.plist`, 09:00 local time; if the Mac is asleep, it runs on wake). It:
+
+1. Collects the last 72 hours of audit events (merged into history) and runs every detection stage, incident response and AI triage (skipped gracefully if Ollama isn't running).
+2. Runs the **full test suite** and stops if anything fails.
+3. Publishes the website data through the **leak check**, which stops publication if any identifier remains.
+4. Commits and pushes **only** `website/data/soc_alerts.json`, staged by name, and only if its content changed (timestamp-only changes are ignored). It refuses to run git if anything else is already staged.
+5. Logs to `reports/daily_update.log` (private, gitignored).
+
+Everything runs locally on purpose: GitHub Actions logs are public for a public repository and would expose raw alert output, and CI has neither the private reports nor the local AI model. New AI notes are published after automatic validation and leak checking, without human review, and stay labelled "analyst review required".
+
+```bash
+# Test once without committing or pushing
+DRY_RUN=1 scripts/daily_update.sh && tail -20 reports/daily_update.log
+
+# Install the daily schedule (one time)
+sed "s|__PROJECT_DIR__|$PWD|g" scripts/com.cybersoc.daily-update.plist > ~/Library/LaunchAgents/com.cybersoc.daily-update.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.cybersoc.daily-update.plist
+
+# Run it now / check its status / remove it
+launchctl kickstart gui/$(id -u)/com.cybersoc.daily-update
+launchctl print gui/$(id -u)/com.cybersoc.daily-update | grep -E "state|last exit code"
+launchctl bootout gui/$(id -u)/com.cybersoc.daily-update && rm ~/Library/LaunchAgents/com.cybersoc.daily-update.plist
+```
+
 ### Full pipeline order
 
 ```bash
