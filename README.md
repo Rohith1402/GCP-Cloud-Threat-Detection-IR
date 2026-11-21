@@ -13,6 +13,7 @@ A free, end-to-end Google Cloud threat detection and SOC project built in Python
 - **Prioritisation:** P1–P4 priority with a per-alert explanation of every score adjustment.
 - **Tuning:** analyst dispositions, expiring suppressions with justification, roll-up of duplicate evidence, and a per-rule noise report.
 - **Incident response:** lifecycle with persistence, analyst approval, simulation-only actions.
+- **AI-assisted triage:** a local LLM (Ollama) writes clearly labelled, advisory triage notes for active P1/P2 alerts from sanitised, identity-free input, with prompt-injection defences and an output leak check.
 - **Real vs simulated:** every alert is labelled REAL, SIMULATED, SYNTHETIC or MIXED from its own evidence.
 - **Privacy:** the public site never shows emails, project IDs, resource names or raw logs; a leak check blocks publication otherwise.
 - **Tested:** a unit test suite plus an end-to-end test that runs a simulated attack through every pipeline stage.
@@ -48,6 +49,8 @@ flowchart LR
     CLS["alert_classifier.py<br/>rules · MITRE ATT&CK ·<br/>P1–P4 priority · tuning"] --> IR["incident_response.py<br/>simulation-only"]
     CLS --> PUB["publish_website_data.py<br/>sanitise + leak check"]
     CLS --> DASH["dashboard.py<br/>local Streamlit"]
+    CLS --> AI["ai_triage.py<br/>local LLM (Ollama),<br/>advisory notes"]
+    AI --> PUB
 
     PUB --> SITE["cyber-soc.pages.dev<br/>Cloudflare Pages"]
     APPS["Apps Script collector<br/>every 5 min, sanitised"] --> SITE
@@ -63,6 +66,7 @@ python3 detection/event_correlation.py           # CORR rules
 python3 detection/behaviour_alert_integration.py # BEHAV rules
 python3 detection/alert_classifier.py            # rules, MITRE, priority, tuning
 python3 detection/incident_response.py           # simulation-only incidents
+python3 detection/ai_triage.py                   # local AI triage notes (needs Ollama)
 python3 detection/publish_website_data.py        # sanitised website data
 
 python -m pytest -q                              # full test suite, incl. end-to-end
@@ -77,6 +81,7 @@ python3 -m http.server 8000 --directory website  # preview the public site
 | 2 | Named GCP detection rules with MITRE ATT&CK, event-ID-aware deduplication, multi-event correlation |
 | 3 | Incident lifecycle with validated transitions, persistence across runs, analyst approval, simulation-only response actions |
 | 4 | Behaviour detection, MITRE enrichment and coverage matrix, risk prioritisation, alert tuning and detection quality, website integration, end-to-end testing |
+| 5 | AI-assisted triage with a local LLM: advisory, sanitised, injection-resistant, validated |
 
 ## Design principles
 
@@ -588,6 +593,7 @@ python3 detection/event_correlation.py
 python3 detection/behaviour_alert_integration.py
 python3 detection/alert_classifier.py      # also applies config/alert_tuning.json
 python3 detection/incident_response.py     # skips suppressed and rolled-up alerts
+python3 detection/ai_triage.py             # optional: local AI triage notes
 python3 detection/publish_website_data.py
 python3 -m streamlit run dashboard.py
 ```
@@ -597,6 +603,31 @@ python3 -m streamlit run dashboard.py
 ```bash
 python3 -m pytest -q tests
 ```
+
+---
+
+## Phase 5: AI-Assisted Triage
+
+`detection/ai_triage.py` uses a local model through [Ollama](https://ollama.com/) to write a short triage note for every active P1/P2 alert: a summary, why it matters, and up to three suggested next checks. The model runs on the analyst's machine, so it is free and no alert data leaves it.
+
+Safeguards:
+
+- **Advisory only.** Notes never change risk score, severity, priority, status or incidents, and every note is labelled "AI-generated: analyst review required" with the model name and time.
+- **Minimal, identity-free input.** The model receives the rule, severity, MITRE technique, score factors, evidence methods, services and risky permissions, plus the principal's *type* (for example "user account" or "Storage bucket"). It never receives emails, project IDs or resource names; the input passes through the same sanitiser and leak check as the website.
+- **Prompt-injection resistance.** Alert content is untrusted data, placed between `<alert_data>` tags with an instruction never to follow text inside it. Output is constrained to a JSON schema and validated again in Python.
+- **Output leak check.** Notes containing an email address, project identifier, resource path, long numeric ID or URL are rejected, not published.
+- **Freshness.** Notes are cached by an input hash. The publisher shows a note only while the alert is still an active P1/P2 and its input is unchanged.
+- **Graceful failure.** If Ollama is not running, the step reports it and the rest of the pipeline is unaffected.
+
+Setup and run:
+
+```bash
+ollama pull gemma4:e4b                 # or any local model with JSON output
+python3 detection/ai_triage.py         # writes reports/ai_triage.json (private)
+python3 detection/publish_website_data.py
+```
+
+Configuration: `AI_TRIAGE_MODEL` (default `gemma4:e4b`) and `OLLAMA_URL` (default `http://localhost:11434`). The tests use a fake model and need no network.
 
 ---
 

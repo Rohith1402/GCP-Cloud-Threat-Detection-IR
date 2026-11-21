@@ -434,6 +434,57 @@ td .muted {
     letter-spacing: 0.5px;
 }
 
+/* AI triage */
+
+.ai-row td {
+    padding: 0 14px 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.ai-note {
+    border: 1px solid rgba(167, 139, 250, 0.4);
+    background: rgba(167, 139, 250, 0.06);
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+.ai-note summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.ai-badge {
+    color: var(--purple);
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+.ai-summary,
+.ai-why {
+    font-size: 12px;
+    line-height: 1.55;
+    margin-top: 10px;
+}
+
+.ai-why {
+    color: #b8c8df;
+}
+
+.ai-steps {
+    font-size: 12px;
+    line-height: 1.6;
+    padding-left: 20px;
+    margin-bottom: 8px;
+}
+
+.ai-meta {
+    font-size: 10px;
+}
+
 /* Behaviour detection */
 
 .behaviour-panel {

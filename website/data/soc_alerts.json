@@ -1,6 +1,6 @@
 {
   "source": "PYTHON_DETECTION_PIPELINE",
-  "generated_at": "2026-11-20T16:33:50.708843+00:00",
+  "generated_at": "2026-11-21T05:31:22.774791+00:00",
   "summary": {
     "total_alerts": 21,
     "active_alerts": 16,
@@ -37,7 +37,8 @@
       "GENERAL-001": 8
     },
     "behaviour_alerts": 1,
-    "correlation_alerts": 0
+    "correlation_alerts": 0,
+    "ai_triaged_alerts": 8
   },
   "behaviour_rules": [
     {
@@ -514,6 +515,18 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": {
+        "summary": "A user account was flagged for possessing a combination of sensitive IAM capabilities. The alert, titled \"Sensitive IAM Permission Combination,\" indicates potential privilege escalation and defense evasion. The principal has permissions such as `iam.roles.create` and `iam.serviceaccountkeys.create`.",
+        "why_it_matters": "The detected permissions allow for actions that could grant elevated access, such as creating roles or service account keys. This signal aligns with the MITRE technique T1548.005, Temporary Elevated Cloud Access.",
+        "next_steps": [
+          "Review the effective permissions for the principal.",
+          "Check the change history of role assignments.",
+          "Determine if the access is necessary and authorized."
+        ],
+        "label": "AI-generated: analyst review required",
+        "model": "gemma4:e4b",
+        "generated_at": "2026-11-21T05:26:06.761652+00:00"
+      },
       "recommendation": "Review effective permissions, principal, role assignment, permission combinations and change history. Determine whether the access is necessary and authorised.",
       "evidence": null
     },
@@ -547,6 +560,18 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": {
+        "summary": "A cloud storage bucket has triggered a critical alert because it is configured to allow public access. This finding aligns with the MITRE technique T1530 (Data from Cloud Storage). The alert is rated P1 with a confidence level of MEDIUM.",
+        "why_it_matters": "Public accessibility increases the risk of unauthorized data exposure or data collection. This configuration could lead to data exfiltration if the stored data is sensitive.",
+        "next_steps": [
+          "Review the bucket's IAM and ACL policies immediately.",
+          "Verify if public access was intentionally configured by the owner.",
+          "Examine access logs for any unusual activity or access patterns."
+        ],
+        "label": "AI-generated: analyst review required",
+        "model": "gemma4:e4b",
+        "generated_at": "2026-11-21T05:26:06.761652+00:00"
+      },
       "recommendation": "Verify whether public access is intended. Review bucket IAM and ACL policies, exposed data and access logs.",
       "evidence": null
     },
@@ -586,6 +611,18 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": {
+        "summary": "A critical alert was generated for the detection of a sensitive operation: Service Account Key creation. This activity is associated with the MITRE technique T1098.001, which involves obtaining additional cloud credentials. The principal involved in this event is identified as a user account.",
+        "why_it_matters": "The creation of service account keys is a high-risk activity that can enable persistence and privilege escalation. These keys grant powerful credentials that could be misused by an attacker.",
+        "next_steps": [
+          "Verify the business justification for the Service Account Key creation.",
+          "Review the key's ownership and creation time for anomalies.",
+          "Determine if the key requires immediate rotation or revocation."
+        ],
+        "label": "AI-generated: analyst review required",
+        "model": "gemma4:e4b",
+        "generated_at": "2026-11-21T05:26:06.761652+00:00"
+      },
       "recommendation": "Verify the actor and business justification. Review key ownership, creation time, usage and rotation or revocation requirements.",
       "evidence": null
     },
@@ -625,6 +662,18 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": {
+        "summary": "A Service Account Key Creation event was detected, classified as CRITICAL severity and P1 priority. This activity aligns with the MITRE technique T1098.001, which involves obtaining additional cloud credentials. The event suggests potential attempts at Privilege Escalation or Persistence.",
+        "why_it_matters": "The creation of service account keys is a high-risk activity used to establish long-term access. This could indicate an attacker attempting to maintain a foothold or elevate privileges within the environment.",
+        "next_steps": [
+          "Verify the actor and business justification for the key creation.",
+          "Review the key's ownership, creation time, and usage.",
+          "Determine if key rotation or revocation is required."
+        ],
+        "label": "AI-generated: analyst review required",
+        "model": "gemma4:e4b",
+        "generated_at": "2026-11-21T05:26:06.761652+00:00"
+      },
       "recommendation": "Verify the actor and business justification. Review key ownership, creation time, usage and rotation or revocation requirements.",
       "evidence": null
     },
@@ -656,6 +705,18 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": {
+        "summary": "An alert for Excessive IAM Permissions was generated, identifying a GCP project as the principal. The alert is rated CRITICAL and assigned a P1 priority. The rule ID is GCP-SCC-002.",
+        "why_it_matters": "Excessive IAM permissions increase the organization's attack surface and violate the principle of least privilege. This requires review to mitigate potential security risks.",
+        "next_steps": [
+          "Review excessive permissions associated with the principal.",
+          "Identify all affected principals and resources.",
+          "Apply the principle of least privilege where appropriate."
+        ],
+        "label": "AI-generated: analyst review required",
+        "model": "gemma4:e4b",
+        "generated_at": "2026-11-21T05:26:06.761652+00:00"
+      },
       "recommendation": "Review excessive permissions, affected principals and resources. Apply least privilege where appropriate.",
       "evidence": null
     },
@@ -689,6 +750,18 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": {
+        "summary": "A critical vulnerability was detected on a compute instance, resulting in a HIGH severity alert. The associated MITRE technique is T1190, Exploit Public-Facing Application, and the tactic is Initial Access. The alert has a MEDIUM confidence rating.",
+        "why_it_matters": "This finding suggests a potential initial access vector. The high risk score indicates that immediate validation is required to assess the severity and exposure of the affected workload.",
+        "next_steps": [
+          "Validate the specific vulnerability and affected workload.",
+          "Assess the severity and external exposure of the compute instance.",
+          "Check for available patches or mitigation strategies."
+        ],
+        "label": "AI-generated: analyst review required",
+        "model": "gemma4:e4b",
+        "generated_at": "2026-11-21T05:26:06.761652+00:00"
+      },
       "recommendation": "Validate the vulnerability, affected workload, severity, exposure and available patch or mitigation.",
       "evidence": null
     },
@@ -728,6 +801,18 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": {
+        "summary": "A high-severity alert was triggered due to the detection of a sensitive operation: SetIamPolicy. This activity is associated with the MITRE tactics of Privilege Escalation and Persistence. The principal involved in this event is identified as a user account.",
+        "why_it_matters": "Modifying IAM policies is a critical security event, as it can grant unauthorized permissions and potentially lead to privilege escalation or persistence within the environment.",
+        "next_steps": [
+          "Review the actor and the affected resource for this IAM policy modification.",
+          "Examine the specific IAM policy changes, including roles granted or removed.",
+          "Determine if the user account has been granted any elevated or suspicious roles."
+        ],
+        "label": "AI-generated: analyst review required",
+        "model": "gemma4:e4b",
+        "generated_at": "2026-11-21T05:26:06.761652+00:00"
+      },
       "recommendation": "Review the actor, affected resource, IAM policy changes, added or removed members, granted roles and authorisation.",
       "evidence": null
     },
@@ -767,6 +852,18 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": {
+        "summary": "A high-severity alert was generated for an IAM Policy Modification. The sensitive operation detected was SetIamPolicy, which is associated with the Privilege Escalation and Persistence tactics. The principal involved is a user account.",
+        "why_it_matters": "Modifying IAM policies can grant unauthorized permissions or establish persistence. This technique (T1098.003) is used to escalate privileges within the environment.",
+        "next_steps": [
+          "Review the actor and the affected resource for this event.",
+          "Examine the specific IAM policy changes that occurred.",
+          "Check if any new roles or members were granted during the operation."
+        ],
+        "label": "AI-generated: analyst review required",
+        "model": "gemma4:e4b",
+        "generated_at": "2026-11-21T05:26:06.761652+00:00"
+      },
       "recommendation": "Review the actor, affected resource, IAM policy changes, added or removed members, granted roles and authorisation.",
       "evidence": null
     },
@@ -805,6 +902,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Review failure count, authentication source, timestamps, service-account ownership and related authentication events.",
       "evidence": null
     },
@@ -857,6 +955,7 @@
         "approved_on": "2026-11-20",
         "expires_on": "2027-02-20"
       },
+      "ai_triage": null,
       "recommendation": "Review the principal's activity and validate its business justification. Investigate related audit events before taking response action.",
       "evidence": {
         "event_count": 4,
@@ -931,6 +1030,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Verify who assigned the privileged role, when it was assigned, its scope and whether the assignment was approved.",
       "evidence": null
     },
@@ -967,6 +1067,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Review network flow evidence, destination, source, workload and expected application behaviour.",
       "evidence": null
     },
@@ -1005,6 +1106,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Verify the creator, purpose, assigned roles and whether the account follows organisational policy.",
       "evidence": null
     },
@@ -1041,6 +1143,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     },
@@ -1077,6 +1180,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     },
@@ -1113,6 +1217,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": "BEHAV-002-wqyfrndcjti",
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     },
@@ -1149,6 +1254,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": "BEHAV-002-wqyfrndcjti",
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     },
@@ -1185,6 +1291,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": "BEHAV-002-wqyfrndcjti",
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     },
@@ -1221,6 +1328,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": "BEHAV-002-wqyfrndcjti",
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     },
@@ -1257,6 +1365,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     },
@@ -1293,6 +1402,7 @@
       "disposition": "UNREVIEWED",
       "covered_by": null,
       "tuning": null,
+      "ai_triage": null,
       "recommendation": "Review the event context, affected resource, actor, related activity and business justification.",
       "evidence": null
     }

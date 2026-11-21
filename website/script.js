@@ -150,6 +150,7 @@ function updateMonitoringStatus() {
         ["Detection Pipeline", socData ? "Published " + formatTime(socData.generated_at) : "Unavailable"],
         ["Rules Triggered", socData ? String(rules) : "-"],
         ["Real GCP / Synthetic Alerts", socData ? `${labels.REAL || 0} / ${(labels.SYNTHETIC || 0) + (labels.SIMULATED || 0)}` : "-"],
+        ["AI Triage Notes", socData ? `${socData.summary.ai_triaged_alerts || 0} of P1/P2 active` : "-"],
         ["Live GCP Audit Feed", liveFeed.status],
         ["Live Feed Refresh", liveFeed.updatedAt ? formatTime(liveFeed.updatedAt) : "-"]
     ];
@@ -224,7 +225,43 @@ function renderAlertTable(data) {
             : "-"));
 
         table.appendChild(row);
+
+        if (alert.ai_triage) {
+            table.appendChild(renderAiTriageRow(alert.ai_triage));
+        }
     });
+}
+
+function renderAiTriageRow(note) {
+    const row = el("tr", "ai-row");
+    const cell = el("td");
+    cell.colSpan = 7;
+
+    const details = el("details", "ai-note");
+    const summary = el("summary");
+    summary.append(
+        el("span", "ai-badge", "AI TRIAGE"),
+        el("span", "muted", note.label || "AI-generated: analyst review required")
+    );
+    details.appendChild(summary);
+
+    details.append(
+        el("p", "ai-summary", note.summary || ""),
+        el("p", "ai-why", "Why it matters: " + (note.why_it_matters || ""))
+    );
+
+    if (Array.isArray(note.next_steps) && note.next_steps.length) {
+        const list = el("ol", "ai-steps");
+        note.next_steps.forEach(step => list.appendChild(el("li", null, step)));
+        details.append(el("p", "section-label", "Suggested next checks"), list);
+    }
+
+    details.appendChild(el("p", "muted ai-meta",
+        `Model: ${note.model || "unknown"} (local) · generated ${formatTime(note.generated_at)} · advisory only, scores unchanged`));
+
+    cell.appendChild(details);
+    row.appendChild(cell);
+    return row;
 }
 
 // ---------- Behaviour detection ----------

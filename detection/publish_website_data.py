@@ -38,6 +38,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 INPUT_FILE = BASE_DIR / "reports" / "consolidated_soc_alerts.json"
 OUTPUT_FILE = BASE_DIR / "website" / "data" / "soc_alerts.json"
+AI_TRIAGE_FILE = BASE_DIR / "reports" / "ai_triage.json"
 
 # Where each source module's data comes from. Edit if a module's
 # input changes between real GCP data and synthetic training data.
@@ -321,7 +322,59 @@ def public_tuning(tuning):
     }
 
 
-def to_public_alert(alert, raw_labels=None):
+def load_ai_triage(triage_file=AI_TRIAGE_FILE):
+    """Load AI triage notes keyed by alert ID (empty if unavailable)."""
+
+    try:
+        with Path(triage_file).open("r", encoding="utf-8") as file:
+            data = json.load(file)
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    results = data.get("results") if isinstance(data, dict) else None
+    return results if isinstance(results, dict) else {}
+
+
+def current_ai_note(alert, ai_triage):
+    """
+    Return the AI note for an alert only if it is still valid: the alert
+    is an active P1/P2 and its triage input is unchanged since the note
+    was generated.
+    """
+
+    if not ai_triage:
+        return None
+
+    note = ai_triage.get(str(alert.get("alert_id")))
+
+    if not isinstance(note, dict):
+        return None
+
+    if alert.get("status", "OPEN") != "OPEN" or alert.get("priority") not in ("P1", "P2"):
+        return None
+
+    try:
+        from detection.ai_triage import triage_input_hash
+    except ImportError:  # Script run directly: python detection/<file>.py
+        from ai_triage import triage_input_hash
+
+    try:
+        if note.get("input_hash") != triage_input_hash(alert):
+            return None
+    except SanitisationError:
+        return None
+
+    return {
+        "summary": note.get("summary"),
+        "why_it_matters": note.get("why_it_matters"),
+        "next_steps": list(note.get("next_steps") or []),
+        "label": note.get("label"),
+        "model": note.get("model"),
+        "generated_at": note.get("generated_at"),
+    }
+
+
+def to_public_alert(alert, raw_labels=None, ai_note=None):
     return {
         "alert_id": alert.get("alert_id"),
         "rule_id": alert.get("rule_id"),
@@ -352,6 +405,7 @@ def to_public_alert(alert, raw_labels=None):
         "disposition": alert.get("disposition") or "UNREVIEWED",
         "covered_by": alert.get("covered_by"),
         "tuning": public_tuning(alert.get("tuning")),
+        "ai_triage": ai_note,
         "recommendation": alert.get("recommendation"),
         "evidence": evidence_summary(alert),
     }
@@ -374,11 +428,18 @@ def behaviour_rule_catalogue():
     ]
 
 
-def build_public_report(alerts, generated_at=None, tuning_rules=None):
+def build_public_report(alerts, generated_at=None, tuning_rules=None, ai_triage=None):
     raw_labels = raw_event_labels(alerts)
 
     public_alerts = sorted(
-        (to_public_alert(alert, raw_labels) for alert in alerts),
+        (
+            to_public_alert(
+                alert,
+                raw_labels,
+                current_ai_note(alert, ai_triage),
+            )
+            for alert in alerts
+        ),
         key=lambda item: (
             item["priority_score"] or 0,
             item["risk_score"] or 0,
@@ -430,6 +491,9 @@ def build_public_report(alerts, generated_at=None, tuning_rules=None):
             ),
             "behaviour_alerts": count_source("gcp_behaviour_alerts"),
             "correlation_alerts": count_source("gcp_event_correlations"),
+            "ai_triaged_alerts": sum(
+                1 for alert in public_alerts if alert["ai_triage"]
+            ),
         },
         "behaviour_rules": behaviour_rule_catalogue(),
         "detection_quality": build_quality_report(
@@ -454,6 +518,7 @@ def main(input_file=INPUT_FILE, output_file=OUTPUT_FILE):
     report = build_public_report(
         alerts,
         tuning_rules=load_tuning_rules(),
+        ai_triage=load_ai_triage(),
     )
 
     output_file = Path(output_file)
@@ -473,6 +538,7 @@ def main(input_file=INPUT_FILE, output_file=OUTPUT_FILE):
     )
     print(f"Behaviour alerts: {summary['behaviour_alerts']}")
     print(f"Correlation alerts: {summary['correlation_alerts']}")
+    print(f"AI triage notes: {summary['ai_triaged_alerts']}")
     print(f"Data labels: {summary['data_labels']}")
     print("Sanitisation and leak check: passed")
     print(f"\nWebsite data: {output_file}")
