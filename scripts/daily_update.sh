@@ -10,7 +10,10 @@
 #   scripts/daily_update.sh            # full run: commit and push
 #   DRY_RUN=1 scripts/daily_update.sh  # everything except commit and push
 #
-# Scheduled daily by launchd (see scripts/com.cybersoc.daily-update.plist).
+# Scheduled by launchd (see scripts/com.cybersoc.daily-update.plist) at
+# 09:00 and at login. Scheduled runs skip if today's update already
+# succeeded or if it is before 09:00, so a day the Mac was switched off at
+# 09:00 is caught up at the next login. Runs from a terminal always run.
 
 set -uo pipefail
 
@@ -21,17 +24,34 @@ PY="$PROJECT_DIR/.venv/bin/python"
 DATA_FILE="website/data/soc_alerts.json"
 LOG_FILE="reports/daily_update.log"
 LOCK_DIR="reports/.daily_update.lock"
+LAST_RUN_FILE="reports/.last_successful_run"
+SCHEDULE_HOUR=9
 DRY_RUN="${DRY_RUN:-0}"
+TODAY="$(date '+%Y-%m-%d')"
 
 mkdir -p reports
 
 # In scheduled runs, write everything to the private log file.
+SCHEDULED=0
 if [ ! -t 1 ]; then
+    SCHEDULED=1
     exec >>"$LOG_FILE" 2>&1
 fi
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 fail() { log "FAILED: $*"; exit 1; }
+mark_done() { [ "$DRY_RUN" = "1" ] || echo "$TODAY" >"$LAST_RUN_FILE"; }
+
+if [ "$SCHEDULED" = "1" ]; then
+    if [ "$(cat "$LAST_RUN_FILE" 2>/dev/null)" = "$TODAY" ]; then
+        log "Skipped: today's update already completed."
+        exit 0
+    fi
+    if [ "$((10#$(date '+%H')))" -lt "$SCHEDULE_HOUR" ]; then
+        log "Skipped: before 09:00; the 09:00 run will handle today."
+        exit 0
+    fi
+fi
 
 log "===== Daily update started (dry run: $DRY_RUN)"
 
@@ -44,6 +64,13 @@ trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
 [ -x "$PY" ] || fail "project virtual environment not found at .venv"
 [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ] || fail "not on branch main"
 git diff --cached --quiet || fail "other changes are already staged; not touching git"
+
+# Right after login the network may not be ready yet: wait up to 2 minutes.
+for attempt in $(seq 1 12); do
+    curl -s -o /dev/null --max-time 5 https://logging.googleapis.com && break
+    [ "$attempt" -eq 12 ] && fail "no network after 2 minutes"
+    sleep 10
+done
 
 run() {
     local name="$1"; shift
@@ -92,6 +119,7 @@ PYEOF
 then
     log "No content change in website data; restoring committed file."
     git checkout -- "$DATA_FILE"
+    mark_done
     log "===== Done (nothing to publish)"
     exit 0
 fi
@@ -107,4 +135,5 @@ git add "$DATA_FILE" || fail "git add"
 git commit -m "Automated daily SOC data update ($(date '+%Y-%m-%d'))" || fail "git commit"
 git push origin main || fail "git push"
 
+mark_done
 log "===== Done (published)"

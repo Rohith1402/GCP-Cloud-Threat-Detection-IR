@@ -616,7 +616,7 @@ The website is deployed with Cloudflare Pages from the `website/` folder of the 
 
 ### Daily automatic update
 
-`scripts/daily_update.sh` runs the whole pipeline on the analyst's Mac once a day, scheduled by macOS **launchd** (`scripts/com.cybersoc.daily-update.plist`, 09:00 local time; if the Mac is asleep, it runs on wake). It:
+`scripts/daily_update.sh` runs the whole pipeline on the analyst's Mac once a day, scheduled by macOS **launchd** (`scripts/com.cybersoc.daily-update.plist`, 09:00 local time and at login). If the Mac is asleep at 09:00 it runs on wake; if it was switched off, the login run catches up. Scheduled runs skip when today's update already succeeded or it is before 09:00, and wait up to 2 minutes for the network after login. It:
 
 1. Collects the last 72 hours of audit events (merged into history) and runs every detection stage, incident response and AI triage (skipped gracefully if Ollama isn't running).
 2. Runs the **full test suite** and stops if anything fails.
@@ -634,8 +634,10 @@ DRY_RUN=1 scripts/daily_update.sh && tail -20 reports/daily_update.log
 sed "s|__PROJECT_DIR__|$PWD|g" scripts/com.cybersoc.daily-update.plist > ~/Library/LaunchAgents/com.cybersoc.daily-update.plist
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.cybersoc.daily-update.plist
 
-# Run it now / check its status / remove it
-launchctl kickstart gui/$(id -u)/com.cybersoc.daily-update
+# Run it now (a terminal run always runs, even if today's update already happened)
+scripts/daily_update.sh
+
+# Check its status / remove it
 launchctl print gui/$(id -u)/com.cybersoc.daily-update | grep -E "state|last exit code"
 launchctl bootout gui/$(id -u)/com.cybersoc.daily-update && rm ~/Library/LaunchAgents/com.cybersoc.daily-update.plist
 ```

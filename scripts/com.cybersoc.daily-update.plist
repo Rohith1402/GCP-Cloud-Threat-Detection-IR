@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  launchd job: runs the Cyber SOC daily update at 09:00 local time.
-  If the Mac is asleep at 09:00, launchd runs it when the Mac wakes.
+  launchd job: runs the Cyber SOC daily update at 09:00 local time,
+  and also at login (RunAtLoad). If the Mac is asleep at 09:00, launchd
+  runs it when the Mac wakes; if it was switched off, the login run
+  catches up. The script skips if today's update already succeeded or
+  if it is before 09:00.
   __PROJECT_DIR__ is replaced with the real path when installing
   (see "Daily automatic update" in the README).
 -->
@@ -24,6 +27,9 @@
         <key>Minute</key>
         <integer>0</integer>
     </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
 
     <key>EnvironmentVariables</key>
     <dict>
